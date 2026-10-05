@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MTG Tournament Organizer</title>
+<style>
+:root{--bg:#0f1218;--panel:#171c25;--panel2:#1e2430;--line:#2a3242;--text:#e6e9ef;--muted:#8e98ab;--accent:#d4a24c;--accent2:#7aa2ff;--good:#3fb37f;--bad:#e5534b;--warn:#e0a030;--chip:#252d3b;--shadow:0 2px 12px rgba(0,0,0,.35);--radius:12px}
+:root.light{--bg:#f4f5f8;--panel:#fff;--panel2:#f0f2f6;--line:#dde1e9;--text:#1b2030;--muted:#647089;--accent:#a8761c;--accent2:#3460d8;--chip:#e9ecf3;--shadow:0 2px 10px rgba(20,30,60,.08)}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--panel2);border-radius:8px;padding:6px 12px;transition:.15s}
+button:hover{border-color:var(--accent2)}button:disabled{opacity:.45;cursor:not-allowed}
+button.primary{background:var(--accent);border-color:var(--accent);color:#1a1205;font-weight:600}button.primary:hover{filter:brightness(1.08)}
+button.danger{color:var(--bad)}button.ghost{background:transparent}button.sm{padding:3px 8px;font-size:12px}
+input,select,textarea{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 9px;min-width:0}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent2);outline-offset:-1px}
+input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent)}
+textarea{width:100%;min-height:140px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+header.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px;max-width:1280px;margin:0 auto}
+.brand{font-weight:800;letter-spacing:.3px;display:flex;align-items:center;gap:8px;font-size:16px}.brand .logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#8a4fff);display:grid;place-items:center;color:#fff;font-size:15px}
+.evname{font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}
+.spacer{flex:1}
+.timer{display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px 6px 4px 10px}
+.timer .tl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tdisp{font-variant-numeric:tabular-nums;font-weight:700;font-size:18px;min-width:64px;text-align:center}.tdisp.over{color:var(--bad)}.tdisp.low{color:var(--warn)}
+.stepper{display:flex;gap:4px;padding:0 16px 10px;max-width:1280px;margin:0 auto;overflow-x:auto}
+.step{flex:1;min-width:92px;text-align:center;font-size:12px;padding:5px 6px;border-radius:999px;background:var(--chip);color:var(--muted);white-space:nowrap}
+.step.done{background:color-mix(in srgb,var(--good) 22%,var(--chip));color:var(--text)}.step.cur{background:var(--accent);color:#1a1205;font-weight:700}
+nav.tabs{display:flex;gap:2px;max-width:1280px;margin:0 auto;padding:0 12px;overflow-x:auto}
+nav.tabs button{border:none;border-bottom:2px solid transparent;border-radius:0;background:none;padding:10px 14px;color:var(--muted);white-space:nowrap}
+nav.tabs button.on{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+main{max-width:1280px;margin:0 auto;padding:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px;box-shadow:var(--shadow)}
+.card h2{margin:0 0 12px;font-size:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.card h3{margin:14px 0 8px;font-size:14px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:860px){.cols2{grid-template-columns:1fr}}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}label.f>input,label.f>select{color:var(--text);font-size:14px}
+label.chk{display:flex;align-items:center;gap:8px;font-size:13px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.muted{color:var(--muted)}.small{font-size:12px}.good{color:var(--good)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--chip);font-size:11px;font-weight:600;color:var(--muted)}
+.badge.acc{background:color-mix(in srgb,var(--accent) 25%,var(--chip));color:var(--text)}.badge.red{background:color-mix(in srgb,var(--bad) 25%,var(--chip));color:var(--text)}.badge.green{background:color-mix(in srgb,var(--good) 25%,var(--chip));color:var(--text)}
+table.t{width:100%;border-collapse:collapse}table.t th,table.t td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+table.t th{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600}table.t td.num,table.t th.num{text-align:right;font-variant-numeric:tabular-nums}
+table.t tr.dropped td{opacity:.5}
+.tw{overflow-x:auto}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}.chips button{border-radius:999px;font-size:12px}.chips button.on{background:var(--accent);color:#1a1205;border-color:var(--accent);font-weight:700}
+.match{display:grid;grid-template-columns:54px 1fr auto 1fr;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:var(--panel2)}
+.match.done{border-left:4px solid var(--good)}.match.open{border-left:4px solid var(--warn)}
+.match .tbl{font-weight:800;font-size:18px;text-align:center;color:var(--accent)}.match .tbl small{display:block;font-size:10px;color:var(--muted);font-weight:500}
+.pl{min-width:0}.pl b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pl span{font-size:12px;color:var(--muted)}.pl.r{text-align:right}
+.score{display:flex;flex-direction:column;align-items:center;gap:6px}.score .big{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+.quick{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}.quick button{padding:2px 7px;font-size:12px}.quick button.sel{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+.nums{display:flex;gap:4px;align-items:center;font-size:11px;color:var(--muted)}.nums input{width:42px;padding:2px 4px;text-align:center}
+@media(max-width:700px){.match{grid-template-columns:40px 1fr;}.match .score{grid-column:1/-1}.match .pl.r{text-align:left;grid-column:2}.match .pl.r::before{content:"vs ";color:var(--muted);font-size:12px}}
+.pod{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel2);margin-bottom:8px}.pod.done{border-left:4px solid var(--good)}.pod.open{border-left:4px solid var(--warn)}
+.pod .ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;flex-wrap:wrap}
+.pod .seat{display:flex;align-items:center;gap:8px;padding:4px 0;border-top:1px dashed var(--line)}.pod .seat:first-of-type{border-top:none}.pod .seat .sn{width:22px;height:22px;border-radius:50%;background:var(--chip);display:grid;place-items:center;font-size:11px;font-weight:700}
+.pod .seat .nm{flex:1;min-width:0}.pod .seat.win .nm b{color:var(--good)}
+.bracket{display:flex;gap:18px;overflow-x:auto;padding-bottom:8px}.bcol{display:flex;flex-direction:column;justify-content:space-around;gap:10px;min-width:210px}
+.bcol h4{margin:0 0 4px;font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:.5px;text-align:center}
+.bm{border:1px solid var(--line);border-radius:9px;background:var(--panel2);overflow:hidden;font-size:13px}.bm.ready{border-color:var(--warn)}.bm.done{border-color:color-mix(in srgb,var(--good) 60%,var(--line))}.bm.bye,.bm.void,.bm.skipped{opacity:.55}
+.bm .bp{display:flex;justify-content:space-between;gap:6px;padding:5px 8px}.bm .bp+.bp{border-top:1px solid var(--line)}.bm .bp.w{font-weight:700;background:color-mix(in srgb,var(--good) 14%,transparent)}.bm .bp .sd{color:var(--muted);font-size:11px;margin-right:4px}
+.bm .bid{font-size:10px;color:var(--muted);padding:2px 8px;background:var(--chip);display:flex;justify-content:space-between}
+.bm .quick{padding:5px}
+.champ{font-size:20px;font-weight:800;padding:14px;border-radius:12px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 35%,var(--panel)),var(--panel));border:1px solid var(--accent);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.table-ring{position:relative;width:280px;height:280px;margin:8px auto}
+.table-ring .felt{position:absolute;inset:58px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--good) 30%,var(--panel2)),var(--panel2));border:2px solid var(--line);display:grid;place-items:center;text-align:center;font-size:12px;color:var(--muted)}
+.table-ring .felt b{display:block;font-size:26px;color:var(--accent)}
+.table-ring .seatc{position:absolute;width:96px;transform:translate(-50%,-50%);text-align:center;font-size:12px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:3px 4px;line-height:1.2}
+.table-ring .seatc i{font-style:normal;color:var(--accent);font-weight:800;margin-right:3px}
+.pickbox{display:flex;gap:16px;align-items:center;flex-wrap:wrap}.pickbox .bignum{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums}.pickbox .lbl{font-size:11px;color:var(--muted);text-transform:uppercase}
+.dir{font-size:20px;font-weight:800}.dir.left{color:var(--accent2)}.dir.right{color:var(--accent)}
+.packdirs{display:flex;gap:6px;flex-wrap:wrap}.packdirs span{padding:4px 10px;border-radius:999px;background:var(--chip);font-size:12px}.packdirs span.cur{outline:2px solid var(--accent)}
+.overlay{position:fixed;inset:0;z-index:100;background:var(--bg);overflow:auto;padding:24px}
+.overlay .close{position:fixed;top:14px;right:18px;z-index:101}
+.bigtimer{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:90vh;gap:18px;text-align:center}
+.bigtimer .ev{font-size:clamp(18px,3vw,34px);color:var(--muted);font-weight:600}.bigtimer .lab{font-size:clamp(24px,5vw,56px);font-weight:800}
+.bigtimer .tdisp{font-size:clamp(90px,24vw,340px);line-height:1;min-width:0}
+.fsgrid{columns:3 320px;column-gap:24px;font-size:clamp(14px,1.6vw,22px)}.fsgrid div{break-inside:avoid;display:flex;gap:10px;padding:4px 6px;border-bottom:1px solid var(--line)}.fsgrid .tn{min-width:56px;font-weight:800;color:var(--accent)}.fsgrid .nm{flex:1;font-weight:600}.fsgrid .op{color:var(--muted)}
+.modal{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:16px}.modal .card{max-width:640px;width:100%;max-height:90vh;overflow:auto}
+.demos{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}.demos button{text-align:left;padding:10px 12px}.demos button b{display:block}.demos button span{font-size:12px;color:var(--muted)}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--accent);padding:10px 16px;border-radius:10px;z-index:200;box-shadow:var(--shadow)}
+.notice{padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--accent2) 14%,var(--panel2));border:1px solid color-mix(in srgb,var(--accent2) 40%,var(--line));margin-bottom:12px;font-size:13px}
+.notice.warn{background:color-mix(in srgb,var(--warn) 14%,var(--panel2));border-color:color-mix(in srgb,var(--warn) 40%,var(--line))}
+.empty{text-align:center;padding:30px;color:var(--muted)}
+#print-area{display:none}
+@media print{body.printing #app,body.printing .toast{display:none!important}body.printing #print-area{display:block}#print-area{color:#000;background:#fff;font-size:12px}#print-area h1{font-size:18px;margin:0 0 4px}#print-area table{width:100%;border-collapse:collapse}#print-area td,#print-area th{border:1px solid #999;padding:4px 6px;text-align:left}html,body{background:#fff}}
+.pod .seat .nm b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.evname{flex:0 1 auto;min-width:0}
+@media(max-width:700px){header.top{position:static}.bar{gap:6px;padding:8px 10px}.bar>button{padding:5px 9px;font-size:13px}main{padding:10px}.card{padding:12px}}
+@media(min-width:1000px){.bar{flex-wrap:nowrap}.bar>button{white-space:nowrap}}
+</style></head><body><div id="app"></div><div id="print-area"></div>
+<script id="mtg-core">
+/* ===== MTG Tournament Core: pure logic (no DOM). Exposed as global `Core`. ===== */
+var Core = (function () {
+  'use strict';
+  var rand = Math.random;
+  function setRandom(f) { rand = f || Math.random; }
+  function seeded(seed) {
+    var s = seed >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0; var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  var idc = 0;
+  function uid(p) { return (p || 'x') + Date.now().toString(36).slice(-5) + (idc++).toString(36) + Math.floor(Math.random() * 46656).toString(36); }
+  function shuffle(arr) { var a = arr.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(rand() * (i + 1)); var x = a[i]; a[i] = a[j]; a[j] = x; } return a; }
+  function avg(a) { return a.length ? a.reduce(function (s, x) { return s + x; }, 0) / a.length : 0; }
+  function pairKey(a, b) { return a < b ? a + '|' + b : b + '|' + a; }
+
+  /* ---------- Formats & settings ---------- */
+  var FORMAT_LIST = ['Standard', 'Modern', 'Pioneer', 'Legacy', 'Vintage', 'Pauper', 'Commander', 'cEDH', 'Booster Draft', 'Sealed', 'Cube', 'Two-Headed Giant', 'Team Sealed', 'Brawl', 'Oathbreaker', 'Custom'];
+  var BASE_SETTINGS = {
+    structure: 'swiss', matchType: '1v1', bestOf: 3, teamSize: 2, swissRounds: 0, topCut: 0, roundMinutes: 50, seeding: 'random',
+    podTarget: 4, podMin: 3, podMax: 5, podPrefer: 'larger', podScoring: 'wlt', podWin: 3, podDraw: 1, podLoss: 0, placementPts: [4, 3, 2, 1, 0],
+    lateEntry: 'loss', limited: 'none', setName: '', packsPerPlayer: 3, cardsPerPack: 14, draftPodMax: 8, pickTimer: 'mtr', pickSeconds: 40,
+    autoAdvancePicks: true, deckbuildMinutes: 30, registrationMinutes: 0, sealedPacks: 6, sealedKit: 'boosters', teamPacks: 12,
+    crossPairing: true, redraftTop8: false, gfReset: true, decklists: false
+  };
+  function presetFor(fmt) {
+    var c = { structure: 'swiss', matchType: '1v1', bestOf: 3, roundMinutes: 50, limited: 'none', topCut: 0, swissRounds: 0, crossPairing: false, redraftTop8: false };
+    switch (fmt) {
+      case 'Standard': case 'Modern': case 'Pioneer': case 'Legacy': case 'Vintage': case 'Pauper': c.decklists = true; break;
+      case 'Brawl': c.decklists = true; break;
+      case 'Commander': Object.assign(c, { matchType: 'pod', podScoring: 'wlt', podWin: 3, podDraw: 1, podLoss: 0, roundMinutes: 80, bestOf: 1 }); break;
+      case 'cEDH': Object.assign(c, { matchType: 'pod', podScoring: 'wlt', podWin: 5, podDraw: 1, podLoss: 0, roundMinutes: 90, topCut: 4, podPrefer: 'larger', bestOf: 1, decklists: true }); break;
+      case 'Oathbreaker': Object.assign(c, { matchType: 'pod', podScoring: 'wlt', podWin: 3, podDraw: 1, podLoss: 0, roundMinutes: 60, bestOf: 1 }); break;
+      case 'Booster Draft': Object.assign(c, { limited: 'draft', packsPerPlayer: 3, cardsPerPack: 14, crossPairing: true, swissRounds: 3, deckbuildMinutes: 30 }); break;
+      case 'Cube': Object.assign(c, { limited: 'draft', setName: 'Cube', packsPerPlayer: 3, cardsPerPack: 15, crossPairing: true, swissRounds: 3, deckbuildMinutes: 30 }); break;
+      case 'Sealed': Object.assign(c, { limited: 'sealed', sealedPacks: 6, sealedKit: 'boosters', deckbuildMinutes: 30 }); break;
+      case 'Two-Headed Giant': Object.assign(c, { matchType: 'team', teamSize: 2, bestOf: 1, roundMinutes: 70, limited: 'sealed', teamPacks: 8, deckbuildMinutes: 60 }); break;
+      case 'Team Sealed': Object.assign(c, { matchType: 'team', teamSize: 3, bestOf: 3, roundMinutes: 50, limited: 'sealed', teamPacks: 12, deckbuildMinutes: 60 }); break;
+      case 'Custom': return {};
+    }
+    return c;
+  }
+  function applyPreset(fmt) { return Object.assign({}, BASE_SETTINGS, presetFor(fmt), { placementPts: BASE_SETTINGS.placementPts.slice() }); }
+  function newTournament(o) {
+    o = o || {};
+    var fmt = o.format || 'Modern';
+    return {
+      v: 1, id: uid('t'), name: o.name || 'Friday Night Magic', format: fmt, created: Date.now(),
+      settings: applyPreset(fmt), players: [], teams: [], phase: 'registration', rounds: [],
+      draft: null, topDraft: null, deckbuilding: null, bracket: null, rrSchedule: null, startCount: 0,
+      timer: { label: 'Timer', duration: 50 * 60, remaining: 50 * 60, running: false, startedAt: null }
+    };
+  }
+  function suggestedRounds(n, matchType) {
+    if (matchType === 'pod') return n <= 8 ? 3 : n <= 32 ? 4 : 5;
+    if (n <= 1) return 0; if (n <= 2) return 1; if (n <= 4) return 2; if (n <= 8) return 3; if (n <= 16) return 4; if (n <= 32) return 5;
+    if (n <= 64) return 6; if (n <= 128) return 7; if (n <= 226) return 8; if (n <= 409) return 9; return 10;
+  }
+
+  /* ---------- Competitors ---------- */
+  function competitors(t) {
+    if (t.settings.matchType === 'team') return t.teams.map(function (x) { return { id: x.id, name: x.name, dropped: !!x.dropped, joinedRound: x.joinedRound || 1, members: (x.members || []).slice() }; });
+    return t.players.map(function (p) { return { id: p.id, name: p.name, dropped: !!p.dropped, joinedRound: p.joinedRound || 1, deck: p.deck || '' }; });
+  }
+  function activeIds(t, roundNum) { return competitors(t).filter(function (c) { return !c.dropped && c.joinedRound <= roundNum; }).map(function (c) { return c.id; }); }
+  function maxPointsPerRound(s) {
+    if (s.matchType !== 'pod') return 3;
+    return s.podScoring === 'placement' ? Math.max.apply(null, s.placementPts.slice(0, Math.max(1, s.podMax))) : s.podWin;
+  }
+  function podPoints(s, m) {
+    if (!m.res) return null; var pts = {};
+    m.pod.forEach(function (c) {
+      if (s.podScoring === 'placement') { var pl = m.res.places && m.res.places[c]; pts[c] = pl ? (Number(s.placementPts[pl - 1]) || 0) : 0; }
+      else pts[c] = m.res.draw ? Number(s.podDraw) : (m.res.winner === c ? Number(s.podWin) : Number(s.podLoss));
+    });
+    return pts;
+  }
+  function podResultComplete(s, m) {
+    if (!m.res) return false;
+    if (s.podScoring === 'placement') return m.pod.every(function (c) { return m.res.places && m.res.places[c]; });
+    return !!(m.res.draw || m.res.winner);
+  }
+  function matchComplete(s, m) { if (m.bye) return true; if (m.pod) return podResultComplete(s, m); return !!m.res; }
+  function roundComplete(t, r) { return r.matches.every(function (m) { return matchComplete(t.settings, m); }); }
+
+  /* ---------- Records & standings (MTR Appendix C) ---------- */
+  function computeRecords(t) {
+    var s = t.settings, isPod = s.matchType === 'pod';
+    var comps = competitors(t), rec = {};
+    comps.forEach(function (c) { rec[c.id] = { id: c.id, mp: 0, played: 0, w: 0, l: 0, d: 0, gw: 0, gl: 0, gd: 0, games: 0, gp: 0, opps: [], byes: 0, missed: 0 }; });
+    t.rounds.forEach(function (r, ri) {
+      if (r.kind === 'final') return;
+      var rn = ri + 1, inRound = {};
+      r.matches.forEach(function (m) {
+        if (m.pod) {
+          m.pod.forEach(function (c) { inRound[c] = 1; });
+          if (!podResultComplete(s, m)) return;
+          var pts = podPoints(s, m);
+          m.pod.forEach(function (c) {
+            var R = rec[c]; if (!R) return;
+            R.mp += pts[c]; R.played++;
+            var won = s.podScoring === 'placement' ? (m.res.places[c] === 1) : m.res.winner === c;
+            if (m.res.draw) R.d++; else if (won) R.w++; else R.l++;
+            m.pod.forEach(function (o) { if (o !== c) R.opps.push(o); });
+          });
+          return;
+        }
+        inRound[m.a] = 1; if (m.b) inRound[m.b] = 1;
+        if (m.bye) { var R = rec[m.a]; if (!R) return; R.mp += 3; R.played++; R.w++; R.gw += 2; R.games += 2; R.gp += 6; R.byes++; return; }
+        if (!m.res) return;
+        var a = Number(m.res.a) || 0, b = Number(m.res.b) || 0, d = Number(m.res.d) || 0;
+        [[rec[m.a], a, b, m.b], [rec[m.b], b, a, m.a]].forEach(function (z) {
+          var R = z[0], x = z[1], y = z[2]; if (!R) return;
+          R.played++; R.games += x + y + d; R.gw += x; R.gl += y; R.gd += d; R.gp += 3 * x + d; R.opps.push(z[3]);
+          if (x > y) { R.w++; R.mp += 3; } else if (x < y) R.l++; else { R.d++; R.mp += 1; }
+        });
+      });
+      comps.forEach(function (c) {
+        if (rn < c.joinedRound && !inRound[c.id]) {
+          var R = rec[c.id];
+          if (s.lateEntry === 'loss') { R.played++; R.l++; R.missed++; if (!isPod) { R.games += 2; R.gl += 2; } }
+          else if (s.lateEntry === 'bye') { R.played++; R.w++; R.missed++; R.mp += maxPointsPerRound(s); if (!isPod) { R.games += 2; R.gw += 2; R.gp += 6; } }
+        }
+      });
+    });
+    return rec;
+  }
+  function standings(t) {
+    var s = t.settings, isPod = s.matchType === 'pod', maxP = maxPointsPerRound(s), F = isPod ? 0 : 0.33;
+    var rec = computeRecords(t), comps = competitors(t), mw = {}, gw = {};
+    comps.forEach(function (c) {
+      var R = rec[c.id];
+      mw[c.id] = R.played ? Math.max(F, R.mp / (maxP * R.played)) : F;
+      gw[c.id] = isPod ? (R.played ? R.w / R.played : 0) : (R.games ? Math.max(F, R.gp / (3 * R.games)) : F);
+    });
+    var rows = comps.map(function (c) {
+      var R = rec[c.id], opps = R.opps.filter(function (o) { return rec[o]; });
+      return {
+        id: c.id, name: c.name, dropped: c.dropped, members: c.members, deck: c.deck, joinedRound: c.joinedRound,
+        mp: R.mp, w: R.w, l: R.l, d: R.d, played: R.played, byes: R.byes, gw: R.gw, gl: R.gl, gd: R.gd,
+        mwp: mw[c.id], gwp: gw[c.id],
+        omw: opps.length ? avg(opps.map(function (o) { return mw[o]; })) : F,
+        ogw: opps.length ? avg(opps.map(function (o) { return gw[o]; })) : F
+      };
+    });
+    var E = 1e-9;
+    rows.sort(function (x, y) {
+      if (Math.abs(y.mp - x.mp) > E) return y.mp - x.mp;
+      if (Math.abs(y.omw - x.omw) > E) return y.omw - x.omw;
+      if (Math.abs(y.gwp - x.gwp) > E) return y.gwp - x.gwp;
+      if (Math.abs(y.ogw - x.ogw) > E) return y.ogw - x.ogw;
+      return String(x.name).localeCompare(String(y.name));
+    });
+    rows.forEach(function (r, i) { r.rank = i + 1; });
+    return rows;
+  }
+
+  /* ---------- Swiss pairing ---------- */
+  function playedPairs(t) {
+    var set = {};
+    t.rounds.forEach(function (r) {
+      r.matches.forEach(function (m) {
+        if (m.pod) { for (var i = 0; i < m.pod.length; i++) for (var j = i + 1; j < m.pod.length; j++) set[pairKey(m.pod[i], m.pod[j])] = (set[pairKey(m.pod[i], m.pod[j])] || 0) + 1; }
+        else if (m.b) set[pairKey(m.a, m.b)] = (set[pairKey(m.a, m.b)] || 0) + 1;
+      });
+    });
+    return set;
+  }
+  function pairNoRematch(order, played, budget) {
+    var n = order.length, used = new Array(n).fill(false), res = [], steps = 0, limit = budget || 30000;
+    function rec() {
+      var i = used.indexOf(false); if (i < 0) return true;
+      used[i] = true;
+      for (var j = i + 1; j < n; j++) {
+        if (used[j] || played[pairKey(order[i], order[j])]) continue;
+        if (++steps > limit) break;
+        used[j] = true; res.push([order[i], order[j]]);
+        if (rec()) return true;
+        res.pop(); used[j] = false;
+      }
+      used[i] = false; return false;
+    }
+    return rec() ? res : null;
+  }
+  function pairGreedy(order, played) {
+    var left = order.slice(), out = [];
+    while (left.length > 1) {
+      var a = left.shift(), j = left.findIndex(function (b) { return !played[pairKey(a, b)]; });
+      if (j < 0) j = 0; out.push([a, left.splice(j, 1)[0]]);
+    }
+    return out;
+  }
+  function pairSwiss(t, opts) {
+    opts = opts || {};
+    var rn = t.rounds.length + 1, ids = opts.ids || activeIds(t, rn);
+    var st = standings(t), pos = {}; st.forEach(function (r, i) { pos[r.id] = i; });
+    var rec = computeRecords(t), played = playedPairs(t);
+    var order = shuffle(ids).sort(function (x, y) { return rec[y].mp - rec[x].mp; });
+    var bye = null, pairs = null;
+    if (order.length % 2 === 1) {
+      var cands = ids.slice().sort(function (x, y) { return pos[y] - pos[x]; });
+      var pref = cands.filter(function (c) { return rec[c].byes === 0; }).concat(cands.filter(function (c) { return rec[c].byes > 0; }));
+      for (var k = 0; k < pref.length; k++) {
+        var rest = order.filter(function (x) { return x !== pref[k]; });
+        var p = pairNoRematch(rest, played);
+        if (p) { bye = pref[k]; pairs = p; break; }
+      }
+      if (!pairs) { bye = pref[0]; pairs = pairGreedy(order.filter(function (x) { return x !== bye; }), played); }
+    } else {
+      pairs = pairNoRematch(order, played, 200000) || pairGreedy(order, played);
+    }
+    return buildMatches(pairs, bye);
+  }
+  function buildMatches(pairs, bye) {
+    var ms = pairs.map(function (p, i) { return { id: uid('m'), table: i + 1, a: p[0], b: p[1], res: null }; });
+    if (bye) ms.push({ id: uid('m'), table: null, a: bye, b: null, bye: true, res: { a: 2, b: 0, d: 0 } });
+    return ms;
+  }
+
+  /* ---------- Multiplayer pods ---------- */
+  function podSizes(n, o) {
+    o = o || {}; var target = o.podTarget || 4, min = o.podMin || 3, max = o.podMax || 5, prefer = o.podPrefer || 'larger';
+    if (n <= 0) return []; if (n < min) return [n];
+    function solve(lo, hi) {
+      var best = null, bestKey = null, sizes = [];
+      for (var s = hi; s >= lo; s--) sizes.push(s);
+      (function rec(i, rem, acc) {
+        if (rem === 0) {
+          var off = acc.filter(function (x) { return x !== target; }).length;
+          var dev = acc.reduce(function (q, x) { return q + Math.abs(x - target); }, 0);
+          var key = [off, dev, prefer === 'larger' ? acc.length : -acc.length];
+          if (!bestKey || key[0] < bestKey[0] || (key[0] === bestKey[0] && (key[1] < bestKey[1] || (key[1] === bestKey[1] && key[2] < bestKey[2])))) { best = acc.slice(); bestKey = key; }
+          return;
+        }
+        if (i >= sizes.length) return;
+        for (var c = Math.floor(rem / sizes[i]); c >= 0; c--) rec(i + 1, rem - c * sizes[i], acc.concat(new Array(c).fill(sizes[i])));
+      })(0, n, []);
+      return best;
+    }
+    var r = prefer === 'smaller' ? solve(min, Math.min(target, max)) : solve(Math.max(min, target), max);
+    if (!r) r = solve(min, max);
+    if (!r) r = [n];
+    return r.sort(function (a, b) { return b - a; });
+  }
+  function podCost(pod, mates, rec) {
+    var c = 0, mx = -Infinity, mn = Infinity;
+    for (var i = 0; i < pod.length; i++) {
+      var p = rec[pod[i]] ? rec[pod[i]].mp : 0; if (p > mx) mx = p; if (p < mn) mn = p;
+      for (var j = i + 1; j < pod.length; j++) c += 1000 * (mates[pairKey(pod[i], pod[j])] || 0);
+    }
+    return c + (pod.length ? (mx - mn) : 0);
+  }
+  function assignPods(ids, sizes, mates, rec) {
+    var best = null, bestCost = Infinity;
+    for (var attempt = 0; attempt < 6; attempt++) {
+      var order = shuffle(ids).sort(function (x, y) { return (rec[y] ? rec[y].mp : 0) - (rec[x] ? rec[x].mp : 0); });
+      var pods = [], k = 0;
+      sizes.forEach(function (sz) { pods.push(order.slice(k, k + sz)); k += sz; });
+      var improved = true, passes = 0;
+      while (improved && passes++ < 60) {
+        improved = false;
+        for (var a = 0; a < pods.length; a++) for (var b = a + 1; b < pods.length; b++) {
+          for (var i = 0; i < pods[a].length; i++) for (var j = 0; j < pods[b].length; j++) {
+            var before = podCost(pods[a], mates, rec) + podCost(pods[b], mates, rec);
+            var x = pods[a][i]; pods[a][i] = pods[b][j]; pods[b][j] = x;
+            var after = podCost(pods[a], mates, rec) + podCost(pods[b], mates, rec);
+            if (after < before) improved = true; else { x = pods[a][i]; pods[a][i] = pods[b][j]; pods[b][j] = x; }
+          }
+        }
+      }
+      var total = pods.reduce(function (s, p) { return s + podCost(p, mates, rec); }, 0);
+      if (total < bestCost) { bestCost = total; best = pods.map(function (p) { return p.slice(); }); }
+      if (bestCost < 1000 && attempt >= 1) break;
+    }
+    return { pods: best || [], cost: bestCost };
+  }
+  function countRepeats(pods, mates) {
+    var r = 0; pods.forEach(function (p) { for (var i = 0; i < p.length; i++) for (var j = i + 1; j < p.length; j++) if (mates[pairKey(p[i], p[j])]) r++; }); return r;
+  }
+  function pairPods(t, opts) {
+    opts = opts || {};
+    var rn = t.rounds.length + 1, ids = opts.ids || activeIds(t, rn);
+    var rec = computeRecords(t), mates = playedPairs(t);
+    var sizes = opts.sizes || podSizes(ids.length, t.settings);
+    var res = assignPods(ids, sizes, mates, rec);
+    var pods = res.pods.map(function (p) { return shuffle(p); });
+    pods.sort(function (x, y) { return y.reduce(function (s, c) { return s + rec[c].mp; }, 0) / y.length - x.reduce(function (s, c) { return s + rec[c].mp; }, 0) / x.length; });
+    return pods.map(function (p, i) { return { id: uid('m'), table: i + 1, pod: p, res: null }; });
+  }
+
+  /* ---------- Round robin ---------- */
+  function roundRobinSchedule(ids) {
+    var arr = ids.slice(); if (arr.length % 2) arr.push(null);
+    var n = arr.length, rounds = [];
+    for (var r = 0; r < n - 1; r++) {
+      var pairs = [];
+      for (var i = 0; i < n / 2; i++) { var a = arr[i], b = arr[n - 1 - i]; pairs.push(r % 2 ? [b, a] : [a, b]); }
+      rounds.push(pairs);
+      arr.splice(1, 0, arr.pop());
+    }
+    return rounds;
+  }
+  function rrRoundMatches(t, idx) {
+    var comps = {}; competitors(t).forEach(function (c) { comps[c.id] = c; });
+    var pairs = [], byes = [];
+    (t.rrSchedule[idx] || []).forEach(function (p) {
+      var a = p[0] && comps[p[0]] && !comps[p[0]].dropped ? p[0] : null, b = p[1] && comps[p[1]] && !comps[p[1]].dropped ? p[1] : null;
+      if (a && b) pairs.push([a, b]); else if (a || b) byes.push(a || b);
+    });
+    var ms = buildMatches(pairs, null);
+    byes.forEach(function (x) { ms.push({ id: uid('m'), table: null, a: x, b: null, bye: true, res: { a: 2, b: 0, d: 0 } }); });
+    return ms;
+  }
+
+  /* ---------- Elimination brackets ---------- */
+  function seedOrder(size) { var o = [1]; while (o.length < size) { var m = o.length * 2 + 1; o = o.reduce(function (acc, s) { acc.push(s, m - s); return acc; }, []); } return o; }
+  function buildBracket(n, type, opts) {
+    opts = opts || {};
+    var size = 1; while (size < n) size *= 2; if (size < 2) size = 2;
+    var k = Math.round(Math.log2(size)), order = seedOrder(size), matches = [];
+    function add(m) { matches.push(m); return m.id; }
+    var prev = [];
+    for (var i = 0; i < size / 2; i++) prev.push(add({ id: 'W1-' + i, side: 'W', round: 1, src: [{ seed: order[2 * i] }, { seed: order[2 * i + 1] }] }));
+    var wbRounds = [prev];
+    for (var r = 2; r <= k; r++) {
+      var cur = [];
+      for (i = 0; i < prev.length / 2; i++) cur.push(add({ id: 'W' + r + '-' + i, side: 'W', round: r, src: [{ winnerOf: prev[2 * i] }, { winnerOf: prev[2 * i + 1] }] }));
+      wbRounds.push(cur); prev = cur;
+    }
+    if (type === 'double') {
+      var lr = 1, lp = [];
+      if (k === 1) {
+        add({ id: 'GF', side: 'GF', round: 1, src: [{ winnerOf: 'W1-0' }, { loserOf: 'W1-0' }] });
+      } else {
+        var w1 = wbRounds[0];
+        for (i = 0; i < w1.length / 2; i++) lp.push(add({ id: 'L1-' + i, side: 'L', round: 1, src: [{ loserOf: w1[2 * i] }, { loserOf: w1[2 * i + 1] }] }));
+        for (r = 2; r <= k; r++) {
+          lr++;
+          var wl = wbRounds[r - 1].slice(); if (r % 2 === 0) wl.reverse();
+          var drop = [];
+          for (i = 0; i < lp.length; i++) drop.push(add({ id: 'L' + lr + '-' + i, side: 'L', round: lr, src: [{ winnerOf: lp[i] }, { loserOf: wl[i] }] }));
+          lp = drop;
+          if (r < k) {
+            lr++; var inn = [];
+            for (i = 0; i < lp.length / 2; i++) inn.push(add({ id: 'L' + lr + '-' + i, side: 'L', round: lr, src: [{ winnerOf: lp[2 * i] }, { winnerOf: lp[2 * i + 1] }] }));
+            lp = inn;
+          }
+        }
+        add({ id: 'GF', side: 'GF', round: 1, src: [{ winnerOf: 'W' + k + '-0' }, { winnerOf: lp[0] }] });
+      }
+      if (opts.gfReset !== false) add({ id: 'GF2', side: 'GF', round: 2, reset: true, src: [{ winnerOf: 'GF' }, { loserOf: 'GF' }] });
+    }
+    return { type: type, n: n, size: size, k: k, matches: matches, results: {}, seeds: [] };
+  }
+  function resolveBracket(br) {
+    var out = {}, seeds = br.seeds || [];
+    function get(src) {
+      if (src.seed != null) return { known: true, v: seeds[src.seed - 1] != null ? seeds[src.seed - 1] : null };
+      var m = out[src.winnerOf || src.loserOf]; if (!m || !m.done) return { known: false, v: null };
+      return { known: true, v: src.winnerOf ? m.winner : m.loser };
+    }
+    br.matches.forEach(function (m) {
+      var o = { id: m.id, side: m.side, round: m.round, p: [null, null], done: false, status: 'pending', winner: null, loser: null };
+      out[m.id] = o;
+      if (m.reset) {
+        var g = out.GF;
+        if (!g || !g.done) { o.p = g ? g.p.slice() : [null, null]; return; }
+        if (g.winner === g.p[0] || g.p[1] == null) { o.status = 'skipped'; o.done = true; o.winner = g.winner; o.loser = g.loser; o.p = g.p.slice(); return; }
+        o.p = [g.p[0], g.p[1]];
+      } else {
+        var A = get(m.src[0]), B = get(m.src[1]); o.p = [A.v, B.v];
+        if (!A.known || !B.known) return;
+        if (A.v == null && B.v == null) { o.done = true; o.status = 'void'; return; }
+        if (A.v == null || B.v == null) { o.done = true; o.status = 'bye'; o.winner = A.v != null ? A.v : B.v; return; }
+      }
+      var res = br.results[m.id];
+      if (res && res.p && res.p[0] === o.p[0] && res.p[1] === o.p[1] && (res.winner === o.p[0] || res.winner === o.p[1])) {
+        o.done = true; o.status = 'done'; o.winner = res.winner; o.loser = res.winner === o.p[0] ? o.p[1] : o.p[0]; o.res = res;
+      } else o.status = 'ready';
+    });
+    return out;
+  }
+  function bracketChampion(br) {
+    var out = resolveBracket(br);
+    if (br.type === 'double') {
+      var g2 = out.GF2, g = out.GF;
+      if (g2) { if (g2.done) return g2.winner; return null; }
+      return g && g.done ? g.winner : null;
+    }
+    var last = br.matches[br.matches.length - 1];
+    return out[last.id].done ? out[last.id].winner : null;
+  }
+  function setBracketResult(br, matchId, winner, a, b) {
+    var o = resolveBracket(br)[matchId];
+    if (!o || (o.status !== 'ready' && o.status !== 'done')) throw new Error('Match not ready: ' + matchId);
+    if (winner !== o.p[0] && winner !== o.p[1]) throw new Error('Winner not in match');
+    br.results[matchId] = { p: o.p.slice(), winner: winner, a: a, b: b };
+  }
+  function bracketPlacements(br) {
+    var out = resolveBracket(br), stage = {}, champ = bracketChampion(br);
+    br.matches.forEach(function (m, idx) {
+      var o = out[m.id]; if (!o.done || o.loser == null) return;
+      var eliminated = br.type === 'single' || m.side !== 'W' || (m.side === 'GF');
+      if (m.id === 'GF' && out.GF2 && out.GF2.status !== 'skipped') eliminated = false;
+      if (eliminated) stage[o.loser] = idx;
+    });
+    if (champ != null) stage[champ] = Infinity;
+    return Object.keys(stage).sort(function (a, b) { return stage[b] - stage[a]; });
+  }
+
+  /* ---------- Limited: draft & sealed ---------- */
+  function draftPodSizes(n, max) { max = max || 8; if (n <= 0) return []; var k = Math.ceil(n / max), base = Math.floor(n / k), extra = n % k; var r = []; for (var i = 0; i < k; i++) r.push(base + (i < extra ? 1 : 0)); return r; }
+  function makeDraftPods(ids, max) {
+    var sh = shuffle(ids), sizes = draftPodSizes(sh.length, max), k = 0;
+    return sizes.map(function (sz, i) { var seats = sh.slice(k, k + sz); k += sz; return { id: 'Pod ' + (i + 1), seats: seats }; });
+  }
+  function passDirection(pack) { return pack % 2 === 1 ? 'left' : 'right'; }
+  var MTR_PICK = { 15: 40, 14: 40, 13: 35, 12: 30, 11: 25, 10: 25, 9: 20, 8: 20, 7: 15, 6: 10, 5: 10, 4: 5, 3: 5, 2: 5, 1: 5 };
+  function pickSeconds(pick, cardsPerPack, mode, fixed) {
+    if (mode === 'off') return 0; if (mode === 'fixed') return Number(fixed) || 40;
+    var remaining = cardsPerPack - pick + 1; return remaining > 15 ? 40 : (MTR_PICK[remaining] || 5);
+  }
+  function crossPairings(pods, activeList) {
+    var active = {}; activeList.forEach(function (x) { active[x] = 1; });
+    var pairs = [], left = [], seated = {};
+    pods.forEach(function (p) {
+      var seats = p.seats.filter(function (x) { seated[x] = 1; return active[x]; }), k = seats.length, h = Math.floor(k / 2);
+      for (var i = 0; i < h; i++) pairs.push([seats[i], seats[i + h]]);
+      if (k % 2) left.push(seats[k - 1]);
+    });
+    activeList.forEach(function (x) { if (!seated[x]) left.push(x); });
+    var sh = shuffle(left); while (sh.length > 1) pairs.push([sh.shift(), sh.shift()]);
+    return { pairs: pairs, bye: sh[0] || null };
+  }
+  function countDeck(text) {
+    var main = 0, side = 0, inSide = false;
+    String(text || '').split(/\r?\n/).forEach(function (line) {
+      var l = line.trim(); if (!l) return;
+      if (/^(\/\/|#)/.test(l)) { if (/side/i.test(l)) inSide = true; return; }
+      if (/^(sideboard|sb)\s*:?$/i.test(l)) { inSide = true; return; }
+      if (/^(deck|main ?deck|main|commander|companion)\s*:?$/i.test(l)) return;
+      var m = l.match(/^(SB:\s*)?(\d+)\s*x?\s+(.+)$/i), n = m ? parseInt(m[2], 10) : 1;
+      if (m && m[1]) side += n; else if (inSide) side += n; else main += n;
+    });
+    return { main: main, side: side };
+  }
+  function deckRule(t) {
+    var s = t.settings, f = t.format;
+    if (s.limited !== 'none') return { min: 40, exact: false, label: '40-card minimum (Limited)' };
+    if (f === 'Commander' || f === 'cEDH') return { min: 100, exact: true, label: 'Exactly 100 cards incl. commander' };
+    if (f === 'Brawl' || f === 'Oathbreaker') return { min: 60, exact: true, label: 'Exactly 60 cards' };
+    return { min: 60, exact: false, label: '60-card minimum, 15-card sideboard max' };
+  }
+  function productNeeded(t) {
+    var s = t.settings, nP = t.players.filter(function (p) { return !p.dropped; }).length, nT = t.teams.filter(function (x) { return !x.dropped; }).length;
+    if (s.limited === 'draft') return { boosters: nP * s.packsPerPlayer, text: nP + ' players × ' + s.packsPerPlayer + ' packs = ' + (nP * s.packsPerPlayer) + ' boosters' };
+    if (s.limited === 'sealed') {
+      if (s.matchType === 'team') return { boosters: nT * s.teamPacks, text: nT + ' teams × ' + s.teamPacks + ' packs = ' + (nT * s.teamPacks) + ' boosters' };
+      if (s.sealedKit === 'prerelease') return { boosters: nP * 6, kits: nP, text: nP + ' prerelease kits (6 boosters + promo each)' };
+      return { boosters: nP * s.sealedPacks, text: nP + ' players × ' + s.sealedPacks + ' packs = ' + (nP * s.sealedPacks) + ' boosters' };
+    }
+    return null;
+  }
+
+  return {
+    setRandom: setRandom, seeded: seeded, uid: uid, shuffle: shuffle, pairKey: pairKey,
+    FORMAT_LIST: FORMAT_LIST, BASE_SETTINGS: BASE_SETTINGS, presetFor: presetFor, applyPreset: applyPreset, newTournament: newTournament, suggestedRounds: suggestedRounds,
+    competitors: competitors, activeIds: activeIds, maxPointsPerRound: maxPointsPerRound, podPoints: podPoints, matchComplete: matchComplete, roundComplete: roundComplete,
+    computeRecords: computeRecords, standings: standings, playedPairs: playedPairs, pairSwiss: pairSwiss, buildMatches: buildMatches,
+    podSizes: podSizes, pairPods: pairPods, countRepeats: countRepeats, roundRobinSchedule: roundRobinSchedule, rrRoundMatches: rrRoundMatches,
+    seedOrder: seedOrder, buildBracket: buildBracket, resolveBracket: resolveBracket, bracketChampion: bracketChampion, setBracketResult: setBracketResult, bracketPlacements: bracketPlacements,
+    draftPodSizes: draftPodSizes, makeDraftPods: makeDraftPods, passDirection: passDirection, pickSeconds: pickSeconds, crossPairings: crossPairings,
+    countDeck: countDeck, deckRule: deckRule, productNeeded: productNeeded
+  };
+})();
+if (typeof module !== 'undefined') module.exports = Core;
+</script>
+<script id="mtg-flow">
+/* ===== Event flow (operates on a tournament object; no DOM). Global `Flow`. ===== */
+var Flow = (function () {
+  'use strict';
+  function setTimer(t, label, sec, run) { t.timer = { label: label, duration: Math.max(0, Math.round(sec)), remaining: Math.max(0, Math.round(sec)), running: !!run, startedAt: run ? Date.now() : null }; }
+  function timerRemaining(t) { var tm = t.timer; if (!tm) return 0; return tm.running ? tm.remaining - (Date.now() - tm.startedAt) / 1000 : tm.remaining; }
+  function isElim(t) { return t.settings.structure === 'single' || t.settings.structure === 'double'; }
+  function totalRounds(t) {
+    var s = t.settings;
+    if (s.structure === 'rr') return t.rrSchedule ? t.rrSchedule.length : Math.max(0, Core.competitors(t).length - (Core.competitors(t).length % 2 ? 0 : 1));
+    if (isElim(t)) return 0;
+    var n = t.startCount || Core.competitors(t).filter(function (c) { return !c.dropped; }).length;
+    return Number(s.swissRounds) > 0 ? Number(s.swissRounds) : Core.suggestedRounds(n, s.matchType);
+  }
+  function hasTopCut(t) { return t.settings.structure === 'swiss' && Number(t.settings.topCut) > 0; }
+  function draftObj(t) { return t.phase === 'topdraft' ? t.topDraft : t.draft; }
+  function setPickTimer(t, keepRunning) {
+    var D = draftObj(t), s = t.settings; if (!D) return;
+    if (D.done) { setTimer(t, 'Draft complete', 0, false); return; }
+    var sec = Core.pickSeconds(D.pick, Number(s.cardsPerPack), s.pickTimer, s.pickSeconds);
+    setTimer(t, 'Pack ' + D.pack + ' · Pick ' + D.pick, sec, keepRunning && sec > 0);
+  }
+  function advancePick(t, dir) {
+    var D = draftObj(t), s = t.settings; if (!D) return;
+    var running = t.timer && t.timer.running; dir = dir || 1;
+    if (dir > 0) {
+      if (D.done) return;
+      D.pick++;
+      if (D.pick > Number(s.cardsPerPack)) { D.pick = 1; D.pack++; if (D.pack > Number(s.packsPerPlayer)) { D.pack = Number(s.packsPerPlayer); D.pick = Number(s.cardsPerPack); D.done = true; } }
+    } else {
+      if (D.done) { D.done = false; } else if (D.pick > 1) D.pick--; else if (D.pack > 1) { D.pack--; D.pick = Number(s.cardsPerPack); }
+    }
+    D.started = true;
+    setPickTimer(t, running);
+  }
+  function nextPack(t) {
+    var D = draftObj(t), s = t.settings; if (!D || D.done) return;
+    if (D.pack >= Number(s.packsPerPlayer)) { D.done = true; D.pick = Number(s.cardsPerPack); } else { D.pack++; D.pick = 1; }
+    D.started = true; setPickTimer(t, false);
+  }
+  function setDeckTimer(t) {
+    var s = t.settings, st = t.deckbuilding ? t.deckbuilding.stage : 'build';
+    if (st === 'registration') setTimer(t, 'Pool registration', Number(s.registrationMinutes) * 60, false);
+    else setTimer(t, t.phase === 'topdeck' ? 'Top cut deckbuilding' : 'Deckbuilding', Number(s.deckbuildMinutes) * 60, false);
+  }
+  function start(t) {
+    var s = t.settings, comps = Core.competitors(t).filter(function (c) { return !c.dropped; });
+    if (comps.length < 2) throw new Error('Need at least 2 ' + (s.matchType === 'team' ? 'teams' : 'players') + ' to start.');
+    t.startCount = comps.length;
+    if (s.limited === 'draft') {
+      t.draft = { pods: Core.makeDraftPods(t.players.filter(function (p) { return !p.dropped; }).map(function (p) { return p.id; }), Number(s.draftPodMax) || 8), pack: 1, pick: 1, started: false, done: false };
+      t.phase = 'draft'; setPickTimer(t, false);
+    } else if (s.limited === 'sealed') {
+      t.deckbuilding = { stage: Number(s.registrationMinutes) > 0 ? 'registration' : 'build' };
+      t.phase = 'deckbuilding'; setDeckTimer(t);
+    } else beginPlay(t);
+  }
+  function finishDraft(t) {
+    if (t.phase === 'topdraft') { t.topDraft.done = true; t.phase = 'topdeck'; t.deckbuilding = { stage: 'build' }; }
+    else { t.draft.done = true; t.phase = 'deckbuilding'; t.deckbuilding = { stage: 'build' }; }
+    setDeckTimer(t);
+  }
+  function nextDeckStage(t) {
+    if (t.deckbuilding && t.deckbuilding.stage === 'registration') { t.deckbuilding.stage = 'build'; setDeckTimer(t); return; }
+    if (t.phase === 'topdeck') beginTopBracket(t, t.topSeeds); else beginPlay(t);
+  }
+  function beginPlay(t) {
+    var s = t.settings; t.phase = 'rounds';
+    if (!t.startCount) t.startCount = Core.competitors(t).filter(function (c) { return !c.dropped; }).length;
+    var ids = Core.activeIds(t, 1);
+    if (isElim(t)) {
+      var br = Core.buildBracket(ids.length, s.structure, { gfReset: s.gfReset });
+      br.seeds = s.seeding === 'order' ? ids.slice() : Core.shuffle(ids);
+      t.bracket = br; setTimer(t, 'Match time', Number(s.roundMinutes) * 60, false); return;
+    }
+    if (s.structure === 'rr') t.rrSchedule = Core.roundRobinSchedule(Core.shuffle(ids));
+    generateRound(t);
+  }
+  function generateRound(t) {
+    var s = t.settings, rn = t.rounds.length + 1, matches;
+    if (t.rounds.length && !Core.roundComplete(t, t.rounds[t.rounds.length - 1])) throw new Error('Finish entering results for the current round first.');
+    if (s.structure === 'rr') { if (rn > t.rrSchedule.length) throw new Error('Round robin complete.'); matches = Core.rrRoundMatches(t, rn - 1); }
+    else if (s.matchType === 'pod') matches = Core.pairPods(t);
+    else if (rn === 1 && s.limited === 'draft' && s.crossPairing && t.draft && s.matchType === '1v1') {
+      var cp = Core.crossPairings(t.draft.pods, Core.activeIds(t, 1)); matches = Core.buildMatches(cp.pairs, cp.bye);
+    } else matches = Core.pairSwiss(t);
+    t.rounds.push({ num: rn, kind: s.structure === 'rr' ? 'rr' : 'swiss', matches: matches, created: Date.now() });
+    setTimer(t, 'Round ' + rn, Number(s.roundMinutes) * 60, false);
+    return t.rounds[t.rounds.length - 1];
+  }
+  function topIds(t) {
+    var n = Number(t.settings.topCut);
+    return Core.standings(t).filter(function (r) { return !r.dropped; }).slice(0, n).map(function (r) { return r.id; });
+  }
+  function startTopCut(t) {
+    var s = t.settings, last = t.rounds[t.rounds.length - 1];
+    if (last && !Core.roundComplete(t, last)) throw new Error('Finish the current round first.');
+    var top = topIds(t);
+    if (top.length < 2) throw new Error('Not enough players for a top cut.');
+    t.topSeeds = top;
+    if (s.matchType === 'pod') {
+      t.rounds.push({ num: t.rounds.length + 1, kind: 'final', matches: [{ id: Core.uid('m'), table: 1, pod: top.slice(), res: null }] });
+      t.phase = 'topcut'; setTimer(t, 'Final table', Number(s.roundMinutes) * 60, false); return;
+    }
+    if (s.redraftTop8 && s.limited === 'draft' && s.matchType === '1v1') {
+      t.topDraft = { pods: [{ id: 'Top ' + top.length + ' pod', seats: Core.shuffle(top) }], pack: 1, pick: 1, started: false, done: false };
+      t.phase = 'topdraft'; setPickTimer(t, false); return;
+    }
+    beginTopBracket(t, top);
+  }
+  function beginTopBracket(t, top) {
+    var br = Core.buildBracket(top.length, 'single'); br.seeds = top.slice(); br.topCut = true;
+    t.bracket = br; t.phase = 'topcut'; setTimer(t, 'Top ' + top.length + ' match', Number(t.settings.roundMinutes) * 60, false);
+  }
+  function winner(t) {
+    if (t.bracket) { var c = Core.bracketChampion(t.bracket); if (c) return c; if (t.phase === 'topcut' || isElim(t)) return null; }
+    var fin = t.rounds.filter(function (r) { return r.kind === 'final'; })[0];
+    if (fin) { var m = fin.matches[0]; if (!m.res) return null; if (t.settings.podScoring === 'placement') { var w = null; Object.keys(m.res.places || {}).forEach(function (k) { if (m.res.places[k] === 1) w = k; }); return w; } return m.res.draw ? null : m.res.winner; }
+    var st = Core.standings(t); return st.length ? st[0].id : null;
+  }
+  function checkComplete(t) {
+    if ((t.phase === 'topcut' || (t.phase === 'rounds' && isElim(t))) && t.bracket && Core.bracketChampion(t.bracket)) t.phase = 'complete';
+    var fin = t.rounds.filter(function (r) { return r.kind === 'final'; })[0];
+    if (t.phase === 'topcut' && fin && Core.matchComplete(t.settings, fin.matches[0])) t.phase = 'complete';
+  }
+  function steps(t) {
+    var s = t.settings, out = [['registration', 'Registration']];
+    if (s.limited === 'draft') out.push(['draft', 'Draft']);
+    if (s.limited !== 'none') out.push(['deckbuilding', 'Deckbuilding']);
+    out.push(['rounds', isElim(t) ? (s.structure === 'double' ? 'Double Elim' : 'Single Elim') : s.structure === 'rr' ? 'Round Robin' : 'Swiss Rounds']);
+    if (hasTopCut(t)) {
+      if (s.redraftTop8 && s.limited === 'draft' && s.matchType === '1v1') { out.push(['topdraft', 'Top ' + s.topCut + ' Draft']); out.push(['topdeck', 'Top Deckbuild']); }
+      out.push(['topcut', s.matchType === 'pod' ? 'Final Table' : 'Top ' + s.topCut]);
+    }
+    out.push(['complete', 'Complete']);
+    return out;
+  }
+  return { setTimer: setTimer, timerRemaining: timerRemaining, isElim: isElim, totalRounds: totalRounds, hasTopCut: hasTopCut, draftObj: draftObj, setPickTimer: setPickTimer,
+    advancePick: advancePick, nextPack: nextPack, setDeckTimer: setDeckTimer, start: start, finishDraft: finishDraft, nextDeckStage: nextDeckStage, beginPlay: beginPlay,
+    generateRound: generateRound, topIds: topIds, startTopCut: startTopCut, beginTopBracket: beginTopBracket, winner: winner, checkComplete: checkComplete, steps: steps };
+})();
+if (typeof module !== 'undefined') module.exports = Flow;
+</script>
+<script id="mtg-app">
+/* ===== UI ===== */
+(function () {
+  'use strict';
+  var KEY = 'mtg-to-v1', THEME_KEY = 'mtg-to-theme';
+  var T = null, UI = { tab: 'event', view: null, overlay: null, openDeck: null, modal: null };
+  var $ = function (s) { return document.querySelector(s); };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function pct(x) { return (x * 100).toFixed(1) + '%'; }
+  function S() { return T.settings; }
+
+  /* ---------- persistence ---------- */
+  function load() {
+    try { var j = localStorage.getItem(KEY); if (j) T = JSON.parse(j); } catch (e) { T = null; }
+    if (!T || !T.settings) T = Core.newTournament({ name: 'My Tournament', format: 'Modern' });
+    T.settings = Object.assign({}, Core.BASE_SETTINGS, T.settings);
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(T)); } catch (e) { toast('Could not save to localStorage: ' + e.message); } }
+  function commit() { Flow.checkComplete(T); save(); render(); }
+  var toastTimer;
+  function toast(msg) { var el = $('#toast'); if (!el) { el = document.createElement('div'); el.id = 'toast'; el.className = 'toast'; document.body.appendChild(el); } el.textContent = msg; el.style.display = 'block'; clearTimeout(toastTimer); toastTimer = setTimeout(function () { el.style.display = 'none'; }, 2600); }
+  function guard(fn) { try { fn(); } catch (e) { toast(e.message || String(e)); console.warn(e); } }
+
+  /* ---------- helpers ---------- */
+  function nm(id) { if (!id) return 'BYE'; var p = T.players.find(function (x) { return x.id === id; }) || T.teams.find(function (x) { return x.id === id; }); return p ? p.name : '?'; }
+  function teamMembers(id) { var tm = T.teams.find(function (x) { return x.id === id; }); return tm ? tm.members.map(nm).join(' & ') : ''; }
+  function sub(id) { if (S().matchType === 'team') return teamMembers(id); var p = T.players.find(function (x) { return x.id === id; }); return p && p.deck ? p.deck : ''; }
+  function inPlay() { return T.rounds.length > 0 || !!T.bracket; }
+  function findMatch(mid) { for (var i = 0; i < T.rounds.length; i++) { var m = T.rounds[i].matches.find(function (x) { return x.id === mid; }); if (m) return m; } return null; }
+  function usedIds() { var u = {}; T.rounds.forEach(function (r) { r.matches.forEach(function (m) { (m.pod || [m.a, m.b]).forEach(function (x) { if (x) u[x] = 1; }); }); }); if (T.bracket) (T.bracket.seeds || []).forEach(function (x) { u[x] = 1; }); return u; }
+  function isCommanderish() { return ['Commander', 'cEDH', 'Oathbreaker', 'Brawl'].indexOf(T.format) >= 0; }
+  function fmtTime(sec) { var neg = sec < 0; sec = Math.abs(Math.round(sec)); var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60; var str = (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(s).padStart(2, '0'); return (neg ? '+' : '') + str; }
+  function quickOpts(bo) { return bo == 1 ? ['1-0', '0-1', '0-0-1'] : bo == 5 ? ['3-0', '3-1', '3-2', '2-2', '2-3', '1-3', '0-3'] : ['2-0', '2-1', '1-0', '1-1', '0-1', '1-2', '0-2', 'ID']; }
+  function recordStr(r) { return r.w + '-' + r.l + (r.d ? '-' + r.d : ''); }
+  function curRound() { return T.rounds[UI.view == null || UI.view >= T.rounds.length ? T.rounds.length - 1 : UI.view]; }
+
+  /* ---------- render ---------- */
+  function render() {
+    var tabs = tabList(); if (!tabs.some(function (x) { return x[0] === UI.tab; })) UI.tab = tabs[0][0];
+    $('#app').innerHTML = header() + '<main>' + phaseBanner() + body() + '</main>' + overlay() + modal();
+    tick(true);
+  }
+  function header() {
+    var tm = T.timer || {};
+    var h = '<header class="top"><div class="bar">' +
+      '<div class="brand"><div class="logo">⚔</div>MTG Tournament</div>' +
+      '<div class="evname" title="' + esc(T.name) + '">' + esc(T.name) + ' · <span class="badge acc">' + esc(T.format) + '</span></div><div class="spacer"></div>' +
+      '<div class="timer"><span class="tl">' + esc(tm.label || 'Timer') + '</span><span class="tdisp" data-tdisp>0:00</span>' +
+      '<button class="sm" data-act="timerToggle" title="Start/Pause">' + (tm.running ? '❚❚' : '▶') + '</button><button class="sm" data-act="timerReset" title="Reset">↺</button><button class="sm" data-act="timerAdd" title="+1 min">+1</button><button class="sm" data-act="overlay" data-v="timer" title="Large display">⛶</button></div>' +
+      '<button data-act="demo">Load demo tournament</button><button data-act="export" title="Export JSON">Export</button><button data-act="import" title="Import JSON">Import</button><button data-act="newEvent" class="ghost">New</button>' +
+      '<button class="ghost" data-act="theme" title="Toggle theme">' + (document.documentElement.classList.contains('light') ? '☾' : '☀') + '</button></div>';
+    var steps = Flow.steps(T), ci = steps.findIndex(function (s) { return s[0] === T.phase; });
+    h += '<div class="stepper">' + steps.map(function (s, i) { return '<div class="step ' + (i < ci ? 'done' : i === ci ? 'cur' : '') + '">' + (i < ci ? '✓ ' : '') + esc(s[1]) + '</div>'; }).join('') + '</div>';
+    h += '<nav class="tabs">' + tabList().map(function (t) { return '<button data-act="tab" data-v="' + t[0] + '" class="' + (UI.tab === t[0] ? 'on' : '') + '">' + t[1] + '</button>'; }).join('') + '</nav></header>';
+    return h;
+  }
+  function tabList() {
+    var s = S(), t = [['event', 'Event setup'], ['players', s.matchType === 'team' ? 'Players & Teams' : 'Players (' + T.players.length + ')']];
+    if (s.limited === 'draft' || T.topDraft) t.push(['draft', 'Draft']);
+    if (s.limited !== 'none' || s.decklists) t.push(['deck', s.limited !== 'none' ? 'Deckbuilding' : 'Decklists']);
+    if (!Flow.isElim(T)) t.push(['pairings', s.matchType === 'pod' ? 'Pods' : 'Pairings']);
+    if (!Flow.isElim(T)) t.push(['standings', 'Standings']);
+    if (Flow.isElim(T) || T.bracket) t.push(['bracket', 'Bracket']);
+    return t;
+  }
+  function phaseBanner() {
+    if (T.phase !== 'complete') return '';
+    var w = Flow.winner(T);
+    return w ? '<div class="champ">🏆 Champion: ' + esc(nm(w)) + (sub(w) ? ' <span class="muted small">(' + esc(sub(w)) + ')</span>' : '') + '</div>' : '';
+  }
+  function body() {
+    switch (UI.tab) {
+      case 'event': return eventTab();
+      case 'players': return playersTab();
+      case 'draft': return draftTab();
+      case 'deck': return deckTab();
+      case 'pairings': return pairingsTab();
+      case 'standings': return standingsTab();
+      case 'bracket': return bracketTab();
+    }
+    return '';
+  }
+
+  /* ---------- Event setup ---------- */
+  function fld(label, key, type, opts) {
+    var s = S(), v = s[key], dis = opts && opts.lock && inPlay() ? ' disabled' : '';
+    if (type === 'sel') return '<label class="f">' + label + '<select data-set="' + key + '"' + dis + '>' + opts.o.map(function (o) { var val = Array.isArray(o) ? o[0] : o, lab = Array.isArray(o) ? o[1] : o; return '<option value="' + esc(val) + '"' + (String(v) === String(val) ? ' selected' : '') + '>' + esc(lab) + '</option>'; }).join('') + '</select></label>';
+    if (type === 'bool') return '<label class="chk"><input type="checkbox" data-set="' + key + '" data-type="bool"' + (v ? ' checked' : '') + dis + '> ' + label + '</label>';
+    if (type === 'list') return '<label class="f">' + label + '<input data-set="' + key + '" data-type="list" value="' + esc((v || []).join(', ')) + '"' + dis + '></label>';
+    return '<label class="f">' + label + '<input type="' + (type === 'num' ? 'number' : 'text') + '" data-set="' + key + '"' + (type === 'num' ? ' data-type="num" min="0"' : '') + ' value="' + esc(v) + '"' + (opts && opts.ph ? ' placeholder="' + esc(opts.ph) + '"' : '') + dis + '></label>';
+  }
+  function eventTab() {
+    var s = S(), n = Core.competitors(T).filter(function (c) { return !c.dropped; }).length;
+    var sug = Core.suggestedRounds(T.startCount || n, s.matchType);
+    var h = '<div class="card"><h2>Event</h2><div class="grid">' +
+      '<label class="f">Event name<input data-tset="name" value="' + esc(T.name) + '"></label>' +
+      '<label class="f">Format<select data-tset="format">' + Core.FORMAT_LIST.map(function (f) { return '<option' + (f === T.format ? ' selected' : '') + '>' + f + '</option>'; }).join('') + '</select></label>' +
+      fld('Round time (minutes)', 'roundMinutes', 'num') +
+      fld('Late entries', 'lateEntry', 'sel', { o: [['loss', 'Match loss for missed rounds (MTR)'], ['bye', 'Bye (win) for missed rounds'], ['none', 'No record for missed rounds']] }) +
+      '</div><p class="muted small">Changing the format applies sensible defaults for structure, scoring and timing. Everything below stays overridable.</p></div>';
+    h += '<div class="card"><h2>Structure</h2><div class="grid">' +
+      fld('Pairing structure', 'structure', 'sel', { lock: 1, o: [['swiss', 'Swiss (optional top cut)'], ['single', 'Single elimination'], ['double', 'Double elimination'], ['rr', 'Round robin']] });
+    if (s.structure === 'swiss') {
+      h += fld('Swiss rounds (0 = suggested: ' + sug + ')', 'swissRounds', 'num', { ph: String(sug) });
+      h += fld(s.matchType === 'pod' ? 'Final table' : 'Top cut', 'topCut', 'sel', { o: s.matchType === 'pod' ? [[0, 'None'], [4, 'Top 4 final pod'], [5, 'Top 5 final pod']] : [[0, 'None'], [2, 'Top 2 (final)'], [4, 'Top 4'], [8, 'Top 8'], [16, 'Top 16']] });
+    }
+    if (Flow.isElim(T)) h += fld('Seeding', 'seeding', 'sel', { lock: 1, o: [['random', 'Random'], ['order', 'Player list order (1st = top seed)']] });
+    if (s.structure === 'double') h += fld('Grand final bracket reset', 'gfReset', 'bool', { lock: 1 });
+    if (s.structure !== 'swiss' && s.matchType === 'pod') h += '<p class="warn small">Elimination / round robin need 1v1 or team matches; pods always use Swiss-style rounds.</p>';
+    h += '</div><p class="muted small">Swiss pairs by match points, avoids rematches, and gives the bye to the lowest-ranked player without a previous bye (bye = 2-0 match win). ' + (s.structure === 'swiss' ? 'Suggested rounds for ' + n + ' entrants: <b>' + sug + '</b>.' : '') + '</p></div>';
+    h += '<div class="card"><h2>Match format</h2><div class="grid">' +
+      fld('Match type', 'matchType', 'sel', { lock: 1, o: [['1v1', '1v1'], ['pod', 'Multiplayer pods (Commander)'], ['team', 'Teams (2HG / Team Sealed)']] });
+    if (s.matchType !== 'pod') h += fld(s.matchType === 'team' ? 'Games per match (per seat)' : 'Best of', 'bestOf', 'sel', { o: [[1, 'Best-of-1'], [3, 'Best-of-3'], [5, 'Best-of-5']] });
+    if (s.matchType === 'team') h += fld('Team size', 'teamSize', 'sel', { lock: 1, o: [[2, '2 (Two-Headed Giant)'], [3, '3 (Team Sealed / Trios)']] });
+    if (s.matchType === 'pod') {
+      h += fld('Preferred pod size', 'podTarget', 'num') + fld('Min pod size', 'podMin', 'num') + fld('Max pod size', 'podMax', 'num') +
+        fld('Odd counts', 'podPrefer', 'sel', { o: [['larger', 'Prefer bigger pods (e.g. 13 → 5,4,4)'], ['smaller', 'Prefer smaller pods (e.g. 13 → 4,3,3,3)']] }) +
+        fld('Scoring', 'podScoring', 'sel', { o: [['wlt', 'Win / Draw / Loss'], ['placement', 'Placement points']] });
+      if (s.podScoring === 'wlt') h += fld('Win points', 'podWin', 'num') + fld('Draw points', 'podDraw', 'num') + fld('Loss points', 'podLoss', 'num');
+      else h += fld('Placement points (1st, 2nd, …)', 'placementPts', 'list');
+      h += '</div><p class="muted small">Pods group players with similar points while minimizing repeat pod-mates. Pod sizes for ' + Math.max(n, 13) + ' players: ' + Core.podSizes(Math.max(n, 13), s).join(', ') + '.</p>';
+    } else h += '</div>';
+    if (s.matchType === 'team') h += '<p class="muted small">Team results are entered as seat wins (2HG: games won by the team; Team Sealed: individual seat matches won, 2 of 3 wins the team match).</p>';
+    h += '</div>';
+    h += '<div class="card"><h2>Limited (Draft / Sealed)</h2><div class="grid">' +
+      fld('Limited type', 'limited', 'sel', { lock: 1, o: [['none', 'None (Constructed)'], ['draft', 'Booster Draft / Cube'], ['sealed', 'Sealed Deck']] });
+    if (s.limited !== 'none') h += fld('Set / Cube name', 'setName', 'text', { ph: 'e.g. Duskmourn, Vintage Cube' });
+    if (s.limited === 'draft') {
+      h += fld('Packs per player', 'packsPerPlayer', 'num') + fld('Cards per pack', 'cardsPerPack', 'num') + fld('Max players per pod', 'draftPodMax', 'num') +
+        fld('Pick timer', 'pickTimer', 'sel', { o: [['mtr', 'MTR schedule (40s → 5s)'], ['fixed', 'Fixed seconds per pick'], ['off', 'Off']] });
+      if (s.pickTimer === 'fixed') h += fld('Seconds per pick', 'pickSeconds', 'num');
+      h += fld('Auto-advance picks when timer ends', 'autoAdvancePicks', 'bool');
+      if (s.matchType === '1v1') h += fld('Round 1: pair across the draft table', 'crossPairing', 'bool');
+      if (s.structure === 'swiss' && s.matchType === '1v1') h += fld('Re-draft for the top cut', 'redraftTop8', 'bool');
+    }
+    if (s.limited === 'sealed') {
+      if (s.matchType === 'team') h += fld('Boosters per team', 'teamPacks', 'num');
+      else h += fld('Sealed pool', 'sealedKit', 'sel', { o: [['boosters', 'Booster packs'], ['prerelease', 'Prerelease kit (6 boosters + promo)']] }) + (s.sealedKit === 'boosters' ? fld('Boosters per player', 'sealedPacks', 'num') : '');
+      h += fld('Pool registration minutes (0 = none)', 'registrationMinutes', 'num');
+    }
+    if (s.limited !== 'none') h += fld('Deckbuilding minutes', 'deckbuildMinutes', 'num');
+    if (s.limited === 'none') h += fld('Collect decklists', 'decklists', 'bool');
+    h += '</div>';
+    var pn = Core.productNeeded(T); if (pn) h += '<p class="small"><b>Product needed:</b> ' + esc(pn.text) + '</p>';
+    h += '</div>';
+    h += '<div class="card"><h2>Event flow</h2><div class="row">' + Flow.steps(T).map(function (x) { return '<span class="badge' + (x[0] === T.phase ? ' acc' : '') + '">' + esc(x[1]) + '</span>'; }).join(' → ') + '</div><div class="row" style="margin-top:12px">' +
+      (T.phase === 'registration' ? '<button class="primary" data-act="start">Start event with ' + n + ' ' + (s.matchType === 'team' ? 'teams' : 'players') + ' →</button>' : '<span class="muted">Event in progress (' + esc(T.phase) + '). Structural settings are locked once play begins.</span>') + '</div></div>';
+    return h;
+  }
+
+  /* ---------- Players ---------- */
+  function playersTab() {
+    var s = S(), team = s.matchType === 'team', used = usedIds(), lateRound = T.rounds.length + 1;
+    var deckLabel = isCommanderish() ? 'Commander' : 'Deck (optional)';
+    var h = '<div class="card"><h2>Add players</h2>';
+    if (inPlay() && !Flow.isElim(T) && T.phase !== 'topcut' && T.phase !== 'complete') h += '<div class="notice warn">Late entry: new ' + (team ? 'teams' : 'players') + ' join from round ' + lateRound + (s.lateEntry === 'loss' ? ' and receive a match loss for each missed round.' : s.lateEntry === 'bye' ? ' and receive a bye for each missed round.' : '.') + '</div>';
+    if (inPlay() && (Flow.isElim(T) || T.phase === 'topcut')) h += '<div class="notice warn">Brackets are fixed; new players cannot join this stage.</div>';
+    h += '<form class="row" data-form="addPlayer"><input name="name" placeholder="Player name" required style="flex:2;min-width:160px"><input name="deck" placeholder="' + deckLabel + '" style="flex:2;min-width:140px"><button class="primary">Add player</button></form>' +
+      '<details style="margin-top:10px"><summary class="muted small">Bulk add (one name per line, optional “Name, Deck”)</summary><form data-form="bulk"><textarea name="bulk" style="min-height:90px" placeholder="Alice, Mono-Red&#10;Bob"></textarea><button>Add all</button></form></details></div>';
+    h += '<div class="card"><h2>Players <span class="badge">' + T.players.filter(function (p) { return !p.dropped; }).length + ' active</span>' + (T.players.some(function (p) { return p.dropped; }) ? '<span class="badge red">' + T.players.filter(function (p) { return p.dropped; }).length + ' dropped</span>' : '') + '</h2>';
+    if (!T.players.length) h += '<div class="empty">No players yet. Add some above or <a href="#" data-act="demo">load a demo tournament</a>.</div>';
+    else {
+      h += '<div class="tw"><table class="t"><thead><tr><th>#</th><th>Name</th><th>' + deckLabel.replace(' (optional)', '') + '</th>' + (team ? '<th>Team</th>' : '') + '<th>Status</th><th></th></tr></thead><tbody>';
+      T.players.forEach(function (p, i) {
+        h += '<tr class="' + (p.dropped ? 'dropped' : '') + '"><td class="muted">' + (i + 1) + '</td><td><input data-pf="name" data-id="' + p.id + '" value="' + esc(p.name) + '" style="width:100%;min-width:120px"></td>' +
+          '<td><input data-pf="deck" data-id="' + p.id + '" value="' + esc(p.deck || '') + '" style="width:100%;min-width:110px"></td>';
+        if (team) h += '<td><select data-pf="team" data-id="' + p.id + '"><option value="">— none —</option>' + T.teams.map(function (tm) { return '<option value="' + tm.id + '"' + (tm.members.indexOf(p.id) >= 0 ? ' selected' : '') + '>' + esc(tm.name) + '</option>'; }).join('') + '</select></td>';
+        var st = p.dropped ? '<span class="badge red">Dropped' + (p.droppedAfter != null ? ' after R' + p.droppedAfter : '') + '</span>' : (p.joinedRound > 1 ? '<span class="badge acc">Late (R' + p.joinedRound + ')</span>' : '<span class="badge green">Active</span>');
+        h += '<td>' + st + '</td><td class="row" style="justify-content:flex-end">' + (p.dropped ? '<button class="sm" data-act="undrop" data-id="' + p.id + '">Re-enter</button>' : '<button class="sm" data-act="drop" data-id="' + p.id + '">Drop</button>') +
+          (used[p.id] ? '' : '<button class="sm danger" data-act="removePlayer" data-id="' + p.id + '">Remove</button>') + '</td></tr>';
+      });
+      h += '</tbody></table></div><p class="muted small">Players who have been paired can’t be removed—drop them instead (they keep their record and stop being paired).</p>';
+    }
+    h += '</div>';
+    if (team) {
+      h += '<div class="card"><h2>Teams (' + s.teamSize + ' players each)</h2><div class="row"><form class="row" data-form="addTeam"><input name="name" placeholder="Team name"><button>Add team</button></form><button data-act="autoTeams">Auto-form teams from unassigned players</button></div>';
+      if (!T.teams.length) h += '<div class="empty">No teams yet.</div>';
+      else {
+        h += '<div class="tw" style="margin-top:10px"><table class="t"><thead><tr><th>Team</th><th>Members</th><th>Status</th><th></th></tr></thead><tbody>';
+        T.teams.forEach(function (tm) {
+          var ok = tm.members.length === Number(s.teamSize);
+          h += '<tr class="' + (tm.dropped ? 'dropped' : '') + '"><td><input data-tf="name" data-id="' + tm.id + '" value="' + esc(tm.name) + '"></td><td>' + (tm.members.map(nm).map(esc).join(', ') || '<span class="muted">—</span>') + (ok ? '' : ' <span class="badge red">' + tm.members.length + '/' + s.teamSize + '</span>') + '</td>' +
+            '<td>' + (tm.dropped ? '<span class="badge red">Dropped</span>' : tm.joinedRound > 1 ? '<span class="badge acc">Late (R' + tm.joinedRound + ')</span>' : '<span class="badge green">Active</span>') + '</td><td class="row" style="justify-content:flex-end">' +
+            (tm.dropped ? '<button class="sm" data-act="undropTeam" data-id="' + tm.id + '">Re-enter</button>' : '<button class="sm" data-act="dropTeam" data-id="' + tm.id + '">Drop</button>') + (used[tm.id] ? '' : '<button class="sm danger" data-act="removeTeam" data-id="' + tm.id + '">Remove</button>') + '</td></tr>';
+        });
+        h += '</tbody></table></div>';
+      }
+      h += '</div>';
+    }
+    if (T.phase === 'registration') h += '<div class="row"><button class="primary" data-act="start">Start event →</button></div>';
+    return h;
+  }
+
+  /* ---------- Draft ---------- */
+  function draftTab() {
+    var s = S();
+    if (UI.draftView === 'top' && !T.topDraft) UI.draftView = null;
+    var D = (UI.draftView === 'main' && T.draft) ? T.draft : (UI.draftView === 'top' || T.phase === 'topdraft' || T.phase === 'topdeck' || ((T.phase === 'topcut' || T.phase === 'complete') && T.topDraft)) && T.topDraft ? T.topDraft : T.draft;
+    var h = '';
+    if (T.draft && T.topDraft) h += '<div class="chips"><button class="' + (D === T.draft ? 'on' : '') + '" data-act="draftView" data-v="main">Main draft</button><button class="' + (D === T.topDraft ? 'on' : '') + '" data-act="draftView" data-v="top">Top cut re-draft</button></div>';
+    if (!D) {
+      var np = T.players.filter(function (p) { return !p.dropped; }).length, pods = Core.draftPodSizes(np, Number(s.draftPodMax));
+      return '<div class="card"><h2>Booster Draft' + (s.setName ? ' · ' + esc(s.setName) : '') + '</h2><p>Seating is randomized when the event starts. With ' + np + ' players you will get ' + pods.length + ' pod(s): ' + (pods.join(', ') || '—') + '.</p><p class="muted">' + s.packsPerPlayer + ' packs × ' + s.cardsPerPack + ' cards.</p><div class="packdirs">' + passList(s, 0) + '</div>' + (T.phase === 'registration' ? '<p><button class="primary" data-act="start">Start event & seat draft →</button></p>' : '') + '</div>';
+    }
+    var active = (T.phase === 'draft' && D === T.draft) || (T.phase === 'topdraft' && D === T.topDraft);
+    var dir = Core.passDirection(D.pack);
+    h += '<div class="card"><h2>' + (D === T.topDraft ? 'Top ' + D.pods[0].seats.length + ' re-draft' : 'Booster Draft') + (s.setName ? ' · ' + esc(s.setName) : '') + (D.done ? ' <span class="badge green">Draft complete</span>' : '') + '</h2>' +
+      '<div class="pickbox"><div><div class="lbl">Pack</div><div class="bignum">' + D.pack + '<span class="muted" style="font-size:18px"> / ' + s.packsPerPlayer + '</span></div></div>' +
+      '<div><div class="lbl">Pick</div><div class="bignum">' + D.pick + '<span class="muted" style="font-size:18px"> / ' + s.cardsPerPack + '</span></div></div>' +
+      '<div><div class="lbl">Passing</div><div class="dir ' + dir + '">' + (dir === 'left' ? '⟳ LEFT' : '⟲ RIGHT') + '</div><div class="muted small">' + (dir === 'left' ? 'clockwise' : 'counter-clockwise') + '</div></div>' +
+      (active ? '<div><div class="lbl">Pick timer</div><div class="tdisp" data-tdisp style="font-size:30px">0:00</div><div class="muted small">' + (s.pickTimer === 'off' ? 'off' : s.pickTimer === 'mtr' ? 'MTR schedule' : s.pickSeconds + 's fixed') + '</div></div>' : '') + '</div>' +
+      '<div class="packdirs" style="margin:12px 0">' + passList(s, D.done ? 0 : D.pack) + '</div>';
+    if (active) {
+      h += '<div class="row">' + (!D.started ? '<button data-act="reseat">🔀 Re-randomize seats</button>' : '') +
+        '<button data-act="timerToggle">' + (T.timer.running ? '❚❚ Pause' : '▶ Start') + ' pick timer</button><button data-act="pickPrev">◀ Prev pick</button><button data-act="pickNext">Next pick ▶</button><button data-act="packNext">Next pack ⏭</button>' +
+        '<label class="chk"><input type="checkbox" data-set="autoAdvancePicks" data-type="bool"' + (s.autoAdvancePicks ? ' checked' : '') + '> Auto-advance</label><div class="spacer"></div><button class="primary" data-act="finishDraft">Finish draft → Deckbuilding</button></div>';
+    }
+    h += '</div><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(320px,1fr))">';
+    D.pods.forEach(function (pod) {
+      var k = pod.seats.length, R = 112, c = 140;
+      h += '<div class="card"><h2>' + esc(pod.id) + ' <span class="badge">' + k + ' seats</span></h2><div class="table-ring"><div class="felt"><div><b>' + (dir === 'left' ? '⟳' : '⟲') + '</b>Pack ' + D.pack + '<br>pass ' + dir + '</div></div>';
+      pod.seats.forEach(function (pid, i) {
+        var ang = (-90 + 360 * i / k) * Math.PI / 180, x = c + R * Math.cos(ang), y = c + R * Math.sin(ang);
+        h += '<div class="seatc" style="left:' + x.toFixed(1) + 'px;top:' + y.toFixed(1) + 'px"><i>' + (i + 1) + '</i>' + esc(nm(pid)) + '</div>';
+      });
+      h += '</div><table class="t small"><thead><tr><th>Seat</th><th>Player</th><th>Passes to</th><th>Receives from</th></tr></thead><tbody>';
+      pod.seats.forEach(function (pid, i) {
+        var to = dir === 'left' ? (i + 1) % k : (i - 1 + k) % k, from = dir === 'left' ? (i - 1 + k) % k : (i + 1) % k;
+        h += '<tr><td>' + (i + 1) + '</td><td>' + esc(nm(pid)) + '</td><td class="muted">' + esc(nm(pod.seats[to])) + '</td><td class="muted">' + esc(nm(pod.seats[from])) + '</td></tr>';
+      });
+      h += '</tbody></table>';
+      if (s.crossPairing && s.matchType === '1v1' && D === T.draft && k > 1) {
+        var hh = Math.floor(k / 2), pairs = [];
+        for (var i = 0; i < hh; i++) pairs.push('Seat ' + (i + 1) + ' vs ' + (i + 1 + hh));
+        h += '<p class="muted small">Round 1 across the table: ' + pairs.join(' · ') + (k % 2 ? ' · Seat ' + k + ' paired outside pod' : '') + '</p>';
+      }
+      h += '</div>';
+    });
+    return h + '</div>';
+  }
+  function passList(s, cur) { var out = []; for (var p = 1; p <= Number(s.packsPerPlayer); p++) out.push('<span class="' + (p === cur ? 'cur' : '') + '">Pack ' + p + ': ' + (Core.passDirection(p) === 'left' ? '⟳ Left' : '⟲ Right') + '</span>'); return out.join(''); }
+
+  /* ---------- Deckbuilding / decklists ---------- */
+  function deckTab() {
+    var s = S(), rule = Core.deckRule(T), pn = Core.productNeeded(T), st = T.deckbuilding && T.deckbuilding.stage;
+    var active = T.phase === 'deckbuilding' || T.phase === 'topdeck', h = '';
+    if (s.limited !== 'none') {
+      h += '<div class="card"><h2>' + (s.limited === 'draft' ? 'Draft deckbuilding' : (s.matchType === 'team' ? (s.teamSize == 2 ? 'Two-Headed Giant Sealed' : 'Team Sealed') : 'Sealed Deck')) + (s.setName ? ' · ' + esc(s.setName) : '') + '</h2>';
+      if (s.limited === 'sealed') h += '<p>Pool: <b>' + (s.matchType === 'team' ? s.teamPacks + ' boosters per team' : s.sealedKit === 'prerelease' ? 'Prerelease kit (6 boosters + promo)' : s.sealedPacks + ' boosters per player') + '</b>' + (Number(s.registrationMinutes) > 0 ? ' · Pool registration: <b>' + s.registrationMinutes + ' min</b>' : '') + ' · Deckbuilding: <b>' + s.deckbuildMinutes + ' min</b></p>';
+      else h += '<p>' + s.packsPerPlayer + ' packs drafted · Deckbuilding: <b>' + s.deckbuildMinutes + ' min</b></p>';
+      if (pn) h += '<p class="small muted">Product: ' + esc(pn.text) + '</p>';
+      if (active) {
+        h += '<div class="pickbox"><div><div class="lbl">' + (st === 'registration' ? 'Pool registration' : T.phase === 'topdeck' ? 'Top cut deckbuilding' : 'Deckbuilding') + '</div><div class="tdisp" data-tdisp style="font-size:44px">0:00</div></div><div class="row">' +
+          '<button data-act="timerToggle">' + (T.timer.running ? '❚❚ Pause' : '▶ Start') + ' timer</button><button data-act="timerReset">↺ Reset</button><button data-act="overlay" data-v="timer">⛶ Large display</button></div></div>' +
+          '<div class="row" style="margin-top:12px"><button class="primary" data-act="deckNext">' + (st === 'registration' ? 'Registration done → Start deckbuilding' : T.phase === 'topdeck' ? 'Begin Top ' + (T.topSeeds || []).length + ' bracket →' : 'Begin Round 1 →') + '</button></div>';
+      } else if (T.phase === 'registration' || T.phase === 'draft') h += '<p class="muted">This phase starts after ' + (s.limited === 'draft' ? 'the draft' : 'registration') + '.</p>';
+      h += '<p class="small muted">Reminder: Limited decks need a minimum of <b>40 cards</b> (basic lands available on request). In team events each player builds a separate deck from the team pool.</p></div>';
+    }
+    h += '<div class="card"><h2>Decklists <span class="badge">' + esc(rule.label) + '</span></h2><div class="tw"><table class="t"><thead><tr><th>Player</th>' + (s.matchType === 'team' ? '<th>Team</th>' : '') + '<th>Deck</th><th class="num">Main</th><th class="num">Side</th><th>Status</th><th></th></tr></thead><tbody>';
+    T.players.forEach(function (p) {
+      var c = Core.countDeck(p.decklist), ok = rule.exact ? c.main === rule.min : c.main >= rule.min;
+      var tm = T.teams.find(function (x) { return x.members.indexOf(p.id) >= 0; });
+      h += '<tr class="' + (p.dropped ? 'dropped' : '') + '"><td>' + esc(p.name) + '</td>' + (s.matchType === 'team' ? '<td class="muted">' + esc(tm ? tm.name : '—') + '</td>' : '') + '<td class="muted">' + esc(p.deck || '') + '</td><td class="num">' + c.main + '</td><td class="num">' + c.side + '</td><td>' +
+        (!p.decklist ? '<span class="badge">Not submitted</span>' : ok ? '<span class="badge green">✓ Legal count</span>' : '<span class="badge red">⚠ ' + c.main + (rule.exact ? ' ≠ ' : ' < ') + rule.min + '</span>') + '</td><td><button class="sm" data-act="openDeck" data-id="' + p.id + '">' + (UI.openDeck === p.id ? 'Close' : 'Edit list') + '</button></td></tr>';
+      if (UI.openDeck === p.id) h += '<tr><td colspan="7"><textarea data-pf="decklist" data-id="' + p.id + '" placeholder="4 Lightning Bolt&#10;17 Mountain&#10;&#10;Sideboard&#10;2 Pyroblast">' + esc(p.decklist || '') + '</textarea><div class="muted small">One card per line, “N Card name”. Lines after “Sideboard” count as sideboard. Saved when the box loses focus.</div></td></tr>';
+    });
+    return h + '</tbody></table></div></div>';
+  }
+
+  /* ---------- Pairings ---------- */
+  function pairingsTab() {
+    var s = S(), total = Flow.totalRounds(T), h = '';
+    if (!T.rounds.length) {
+      return '<div class="card"><h2>' + (s.matchType === 'pod' ? 'Pods' : 'Pairings') + '</h2><div class="empty">' + (T.phase === 'registration' ? 'Start the event to generate round 1.<br><br><button class="primary" data-act="start">Start event →</button>' : T.phase === 'draft' || T.phase === 'deckbuilding' ? 'Round 1 will be paired after ' + (T.phase === 'draft' ? 'the draft and deckbuilding' : 'deckbuilding') + '.' : 'No rounds yet.') + '</div></div>';
+    }
+    var R = curRound(), vi = T.rounds.indexOf(R), cur = vi === T.rounds.length - 1;
+    h += '<div class="chips">' + T.rounds.map(function (r, i) { return '<button data-act="viewRound" data-v="' + i + '" class="' + (i === vi ? 'on' : '') + '">' + (r.kind === 'final' ? 'Final table' : 'Round ' + r.num) + (Core.roundComplete(T, r) ? ' ✓' : '') + '</button>'; }).join('') + '</div>';
+    var done = Core.roundComplete(T, R), open = R.matches.filter(function (m) { return !Core.matchComplete(s, m); }).length;
+    h += '<div class="card"><h2>' + (R.kind === 'final' ? 'Final table' : 'Round ' + R.num + (total ? ' of ' + total : '')) + ' ' + (done ? '<span class="badge green">Complete</span>' : '<span class="badge acc">' + open + ' result' + (open === 1 ? '' : 's') + ' outstanding</span>') +
+      '<div class="spacer"></div><button class="sm" data-act="timerRound">⏱ Reset round timer</button><button class="sm" data-act="overlay" data-v="pairings">⛶ Fullscreen</button><button class="sm" data-act="printPairings">🖨 Print</button></h2>';
+    if (!cur) h += '<div class="notice warn">Editing a past round. Standings recalculate immediately; later rounds keep their existing pairings.</div>';
+    var st = Core.standings(T), byId = {}; st.forEach(function (r) { byId[r.id] = r; });
+    if (R.matches.some(function (m) { return m.pod; })) h += '<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">' + R.matches.map(function (m) { return podCard(m, byId, R); }).join('') + '</div>';
+    else R.matches.forEach(function (m) { h += matchRow(m, byId); });
+    return h + '<div class="row" style="margin-top:12px">' + roundActions(R, cur, done, total) + '</div></div>';
+  }
+  function roundActions(R, cur, done, total) {
+    var s = S(), h = '';
+    if (!cur || T.phase !== 'rounds') { if (T.phase === 'topcut' && cur && R.kind === 'final') h += '<span class="muted">Enter the final table result to crown the champion.</span>'; return h; }
+    var n = T.rounds.length;
+    if (n < total) h += '<button class="primary" data-act="nextRound"' + (done ? '' : ' disabled') + '>Pair round ' + (n + 1) + ' →</button>';
+    else if (Flow.hasTopCut(T)) h += '<button class="primary" data-act="topCut"' + (done ? '' : ' disabled') + '>Start ' + (s.matchType === 'pod' ? 'final table (top ' + s.topCut + ')' : 'top ' + s.topCut) + ' →</button>';
+    else h += '<button class="primary" data-act="finish"' + (done ? '' : ' disabled') + '>Finish event 🏁</button>';
+    if (s.structure === 'swiss' && n >= total) h += '<button data-act="extraRound"' + (done ? '' : ' disabled') + '>Add extra Swiss round</button>';
+    if (!R.matches.some(function (m) { return !m.bye && m.res; })) h += '<button class="danger" data-act="deleteRound">Delete & re-pair round ' + n + '</button>';
+    return h;
+  }
+  function matchRow(m, byId) {
+    var s = S(), A = byId[m.a] || {}, B = m.b ? byId[m.b] || {} : null;
+    if (m.bye) return '<div class="match done"><div class="tbl">—<small>bye</small></div><div class="pl"><b>' + esc(nm(m.a)) + '</b><span>' + (A.played != null ? recordStr(A) + ' · ' + A.mp + ' pts' : '') + '</span></div><div class="score"><span class="big">2–0</span><span class="badge green">BYE</span></div><div class="pl r"><b class="muted">Bye</b><span>counts as a 2-0 match win</span></div></div>';
+    var r = m.res, cur = r ? r.a + '-' + r.b + (r.d ? '-' + r.d : '') : '';
+    var q = quickOpts(s.bestOf).map(function (o) { var sel = r && (o === 'ID' ? !!r.id : cur === o && !r.id); return '<button data-act="quick" data-mid="' + m.id + '" data-r="' + o + '" class="' + (sel ? 'sel' : '') + '" title="' + (o === 'ID' ? 'Intentional draw' : esc(nm(m.a)) + ' ' + o) + '">' + o + '</button>'; }).join('');
+    var label = r ? (r.a > r.b ? esc(nm(m.a)) + ' wins' : r.b > r.a ? esc(nm(m.b)) + ' wins' : (r.id ? 'Intentional draw' : 'Draw')) : '';
+    return '<div class="match ' + (r ? 'done' : 'open') + '"><div class="tbl">' + m.table + '<small>table</small></div>' +
+      '<div class="pl"><b>' + esc(nm(m.a)) + '</b><span>' + (A.played != null ? recordStr(A) + ' · ' + A.mp + ' pts' : '') + (sub(m.a) ? ' · ' + esc(sub(m.a)) : '') + '</span></div>' +
+      '<div class="score">' + (r ? '<span class="big">' + r.a + '–' + r.b + (r.d ? '–' + r.d : '') + '</span><span class="small muted">' + label + '</span>' : '<span class="muted small">' + (s.matchType === 'team' ? 'seat wins' : 'games') + '</span>') +
+      '<div class="quick">' + q + '</div><div class="nums">W<input type="number" min="0" max="9" data-res="a" data-mid="' + m.id + '" value="' + (r ? r.a : '') + '">L<input type="number" min="0" max="9" data-res="b" data-mid="' + m.id + '" value="' + (r ? r.b : '') + '">D<input type="number" min="0" max="9" data-res="d" data-mid="' + m.id + '" value="' + (r ? r.d || 0 : '') + '">' + (r ? '<button class="sm ghost" data-act="clearRes" data-mid="' + m.id + '" title="Clear">✕</button>' : '') + '</div></div>' +
+      '<div class="pl r"><b>' + esc(nm(m.b)) + '</b><span>' + (sub(m.b) ? esc(sub(m.b)) + ' · ' : '') + (B && B.played != null ? recordStr(B) + ' · ' + B.mp + ' pts' : '') + '</span></div></div>';
+  }
+  function podCard(m, byId, R) {
+    var s = S(), done = Core.matchComplete(s, m), h = '<div class="pod ' + (done ? 'done' : 'open') + '"><div class="ph"><b>' + (R.kind === 'final' ? '🏆 Final table' : 'Pod ' + m.table) + ' <span class="badge">' + m.pod.length + ' players</span></b>';
+    if (s.podScoring === 'wlt') h += '<select data-podwin="' + m.id + '"><option value="">— result —</option>' + m.pod.map(function (c) { return '<option value="' + c + '"' + (m.res && m.res.winner === c ? ' selected' : '') + '>Winner: ' + esc(nm(c)) + '</option>'; }).join('') + '<option value="__draw"' + (m.res && m.res.draw ? ' selected' : '') + '>Draw (all players)</option></select>';
+    else if (m.res) h += '<button class="sm ghost" data-act="clearRes" data-mid="' + m.id + '">Clear</button>';
+    h += '</div>';
+    var pts = done ? Core.podPoints(s, m) : null;
+    m.pod.forEach(function (c, i) {
+      var r = byId[c] || {}, win = m.res && (m.res.winner === c || (m.res.places && m.res.places[c] === 1));
+      h += '<div class="seat ' + (win ? 'win' : '') + '"><span class="sn" title="Seat / turn order">' + (i + 1) + '</span><div class="nm"><b>' + esc(nm(c)) + (win ? ' 🏆' : '') + '</b><span class="muted small">' + esc(sub(c)) + (r.played != null ? ' · ' + r.mp + ' pts' : '') + '</span></div>';
+      if (s.podScoring === 'placement') h += '<select data-podplace="' + m.id + '" data-cid="' + c + '"><option value="">place</option>' + m.pod.map(function (_, k) { return '<option value="' + (k + 1) + '"' + (m.res && m.res.places && m.res.places[c] === k + 1 ? ' selected' : '') + '>' + ordinal(k + 1) + '</option>'; }).join('') + '</select>';
+      if (pts) h += '<span class="badge acc">+' + pts[c] + '</span>';
+      h += '</div>';
+    });
+    return h + '<div class="muted small" style="margin-top:4px">Seat 1 takes the first turn.</div></div>';
+  }
+  function ordinal(n) { var s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+
+  /* ---------- Standings ---------- */
+  function standingsTab() {
+    var s = S(), st = Core.standings(T), isPod = s.matchType === 'pod', team = s.matchType === 'team';
+    var h = '<div class="card"><h2>' + (T.phase === 'complete' ? 'Final standings' : 'Standings') + ' <span class="muted small">after ' + T.rounds.filter(function (r) { return r.kind !== 'final' && Core.roundComplete(T, r); }).length + ' completed round(s)</span><div class="spacer"></div><button class="sm" data-act="overlay" data-v="standings">⛶ Fullscreen</button><button class="sm" data-act="printStandings">🖨 Print</button></h2>';
+    if (!st.length) return h + '<div class="empty">No entrants yet.</div></div>';
+    h += '<div class="tw"><table class="t"><thead><tr><th>#</th><th>' + (team ? 'Team' : 'Player') + '</th><th class="num">Pts</th><th class="num">W-L-D</th>' +
+      (isPod ? '<th class="num" title="Average opponent points share">Opp %</th><th class="num">Win %</th><th class="num" title="Average opponent win rate">Opp Win %</th>' : '<th class="num" title="Opponents’ match-win % (33% floor)">OMW%</th><th class="num" title="Game-win %">GW%</th><th class="num" title="Opponents’ game-win %">OGW%</th>') + '<th></th></tr></thead><tbody>';
+    var cut = Flow.hasTopCut(T) ? Number(s.topCut) : 0, k = 0;
+    st.forEach(function (r) {
+      if (!r.dropped) k++;
+      h += '<tr class="' + (r.dropped ? 'dropped' : '') + '"' + (cut && k === cut && !r.dropped ? ' style="border-bottom:3px solid var(--accent)"' : '') + '><td>' + r.rank + '</td><td><b>' + esc(r.name) + '</b>' + (team ? '<div class="muted small">' + esc((r.members || []).map(nm).join(' & ')) + '</div>' : r.deck ? '<div class="muted small">' + esc(r.deck) + '</div>' : '') + '</td><td class="num"><b>' + r.mp + '</b></td><td class="num">' + recordStr(r) + '</td>' +
+        '<td class="num">' + pct(r.omw) + '</td><td class="num">' + pct(r.gwp) + '</td><td class="num">' + pct(r.ogw) + '</td><td>' + (r.dropped ? '<span class="badge red">Drop</span>' : '') + (r.byes ? ' <span class="badge">' + r.byes + ' bye</span>' : '') + (r.joinedRound > 1 ? ' <span class="badge acc">Late</span>' : '') + '</td></tr>';
+    });
+    return h + '</tbody></table></div><p class="muted small">' + (isPod ? 'Tiebreakers: points, average opponent points share, win rate, opponents’ win rate.' : 'Tiebreakers (MTR Appendix C): match points (win 3, draw 1), OMW% with 33% floor, GW%, OGW%. Byes count as 2-0 wins but are excluded from opponent averages.') + (cut ? ' The gold line marks the top ' + cut + ' cut.' : '') + '</p></div>';
+  }
+
+  /* ---------- Bracket ---------- */
+  function bracketTab() {
+    var br = T.bracket, s = S();
+    if (!br) return '<div class="card"><h2>Bracket</h2><div class="empty">' + (T.phase === 'registration' ? 'The bracket is seeded when the event starts.<br><br><button class="primary" data-act="start">Start event →</button>' : 'The top cut bracket appears after Swiss.') + '</div></div>';
+    var out = Core.resolveBracket(br), seedOf = {}; br.seeds.forEach(function (id, i) { seedOf[id] = i + 1; });
+    var champ = Core.bracketChampion(br);
+    var h = '<div class="card"><h2>' + (br.topCut ? 'Top ' + br.n + ' (single elimination, seeded from Swiss)' : br.type === 'double' ? 'Double elimination' : 'Single elimination') + ' <span class="badge">' + br.n + ' entrants · ' + br.size + '-slot bracket</span>' + (champ ? '<span class="badge green">Champion: ' + esc(nm(champ)) + '</span>' : '') + '<div class="spacer"></div><button class="sm" data-act="timerRound">⏱ Reset match timer</button></h2>';
+    var sides = br.type === 'double' ? [['W', 'Winners bracket'], ['L', 'Losers bracket'], ['GF', 'Grand final']] : [['W', '']];
+    sides.forEach(function (sd) {
+      var ms = br.matches.filter(function (m) { return m.side === sd[0]; }); if (!ms.length) return;
+      var rounds = []; ms.forEach(function (m) { (rounds[m.round - 1] = rounds[m.round - 1] || []).push(m); });
+      if (sd[1]) h += '<h3>' + sd[1] + '</h3>';
+      h += '<div class="bracket">';
+      rounds.forEach(function (rm, ri) {
+        var title = sd[0] === 'GF' ? (ri === 0 ? 'Grand final' : 'Bracket reset (if needed)') : sd[0] === 'W' ? roundName(ri + 1, br.k, br.type === 'double') : 'Losers R' + (ri + 1);
+        h += '<div class="bcol"><h4>' + title + '</h4>' + rm.map(function (m) { return bmatch(m, out[m.id], seedOf); }).join('') + '</div>';
+      });
+      h += '</div>';
+    });
+    h += '</div>';
+    var pl = Core.bracketPlacements(br);
+    if (pl.length) h += '<div class="card"><h2>Placings so far</h2><ol>' + pl.map(function (id) { return '<li>' + esc(nm(id)) + '</li>'; }).join('') + '</ol></div>';
+    return h;
+  }
+  function roundName(r, k, dbl) { var left = k - r; if (left === 0) return dbl ? 'Winners final' : 'Final'; if (left === 1) return dbl ? 'Winners semis' : 'Semifinals'; if (left === 2) return dbl ? 'Winners quarters' : 'Quarterfinals'; return 'Round ' + r; }
+  function bmatch(m, o, seedOf) {
+    var s = S(), res = o.res;
+    function line(i) {
+      var id = o.p[i], w = o.done && o.winner && o.winner === id;
+      return '<div class="bp ' + (w ? 'w' : '') + '"><span>' + (id ? '<span class="sd">' + (seedOf[id] || '') + '</span>' + esc(nm(id)) : '<span class="muted">' + (o.status === 'pending' ? 'TBD' : 'bye') + '</span>') + '</span><span>' + (res ? (i === 0 ? res.a : res.b) : '') + '</span></div>';
+    }
+    var h = '<div class="bm ' + o.status + '"><div class="bid"><span>' + m.id + '</span><span>' + o.status + '</span></div>' + line(0) + line(1);
+    if (o.status === 'ready' || o.status === 'done') {
+      var need = Math.ceil(Number(s.bestOf) / 2), opts = [], l;
+      for (l = 0; l < need; l++) opts.push(need + '-' + l); for (l = need - 1; l >= 0; l--) opts.push(l + '-' + need);
+      h += '<div class="quick">' + opts.map(function (x) { var sel = res && res.a + '-' + res.b === x; return '<button class="' + (sel ? 'sel' : '') + '" data-act="bres" data-mid="' + m.id + '" data-r="' + x + '">' + x + '</button>'; }).join('') + (o.status === 'done' ? '<button data-act="bclear" data-mid="' + m.id + '" title="Clear">✕</button>' : '') + '</div>';
+    }
+    return h + '</div>';
+  }
+
+  /* ---------- Overlays ---------- */
+  function overlay() {
+    if (!UI.overlay) return '';
+    var h = '<div class="overlay"><button class="close" data-act="overlay" data-v="">✕ Close (Esc)</button>';
+    if (UI.overlay === 'timer') {
+      h += '<div class="bigtimer"><div class="ev">' + esc(T.name) + ' · ' + esc(T.format) + '</div><div class="lab">' + esc(T.timer.label) + '</div><div class="tdisp" data-tdisp>0:00</div><div class="row"><button data-act="timerToggle">' + (T.timer.running ? '❚❚ Pause' : '▶ Start') + '</button><button data-act="timerReset">↺ Reset</button><button data-act="timerAdd">+1 min</button><button data-act="timerSub">−1 min</button><button data-act="fullscreen">Browser fullscreen</button></div><div class="muted small">Space = start/pause</div></div>';
+    } else if (UI.overlay === 'pairings') {
+      var R = curRound();
+      h += '<h1>' + esc(T.name) + ' — ' + (R ? (R.kind === 'final' ? 'Final table' : 'Round ' + R.num) : '') + ' pairings &nbsp;<span class="tdisp" data-tdisp style="font-size:28px"></span></h1><div class="fsgrid">' + (R ? pairingLines(R).map(function (x) { return '<div><span class="tn">' + esc(x[1]) + '</span><span class="nm">' + esc(x[0]) + '</span><span class="op">' + esc(x[2]) + '</span></div>'; }).join('') : '') + '</div>';
+    } else if (UI.overlay === 'standings') {
+      h += '<h1>' + esc(T.name) + ' — Standings</h1><div class="fsgrid">' + Core.standings(T).map(function (r) { return '<div><span class="tn">' + r.rank + '.</span><span class="nm">' + esc(r.name) + '</span><span class="op">' + r.mp + ' pts · ' + recordStr(r) + '</span></div>'; }).join('') + '</div>';
+    }
+    return h + '</div>';
+  }
+  function pairingLines(R) {
+    var out = [];
+    R.matches.forEach(function (m) {
+      if (m.pod) m.pod.forEach(function (c, i) { out.push([nm(c), (R.kind === 'final' ? 'Final' : 'Pod ' + m.table), 'Seat ' + (i + 1) + ' of ' + m.pod.length]); });
+      else if (m.bye) out.push([nm(m.a), 'BYE', '']);
+      else { out.push([nm(m.a), 'T' + m.table, 'vs ' + nm(m.b)]); out.push([nm(m.b), 'T' + m.table, 'vs ' + nm(m.a)]); }
+    });
+    return out.sort(function (a, b) { return a[0].localeCompare(b[0]); });
+  }
+  function modal() {
+    if (UI.modal !== 'demo') return '';
+    var d = DEMOS.map(function (x, i) { return '<button data-act="loadDemo" data-v="' + i + '"><b>' + esc(x.title) + '</b><span>' + esc(x.desc) + '</span></button>'; }).join('');
+    return '<div class="modal" data-act="closeModal"><div class="card"><h2>Load demo tournament<div class="spacer"></div><button class="sm" data-act="closeModal">✕</button></h2><p class="muted small">Replaces the current event (export it first if you want to keep it).</p><div class="demos">' + d + '</div></div></div>';
+  }
+
+  /* ---------- Printing / export ---------- */
+  function doPrint(html) { var el = $('#print-area'); el.innerHTML = html; document.body.classList.add('printing'); window.print(); setTimeout(function () { document.body.classList.remove('printing'); }, 400); }
+  function printPairings() {
+    var R = curRound(); if (!R) return;
+    var h = '<h1>' + esc(T.name) + ' — ' + (R.kind === 'final' ? 'Final table' : 'Round ' + R.num) + ' pairings</h1><p>' + esc(T.format) + ' · ' + new Date().toLocaleString() + '</p><table><tr><th>Player</th><th>Table</th><th>Opponent</th></tr>' +
+      pairingLines(R).map(function (x) { return '<tr><td>' + esc(x[0]) + '</td><td>' + esc(x[1]) + '</td><td>' + esc(x[2]) + '</td></tr>'; }).join('') + '</table>';
+    if (!R.matches.some(function (m) { return m.pod; })) h += '<h1 style="margin-top:20px">Result slips</h1><table><tr><th>Table</th><th>Player A</th><th>Player B</th><th>Result (A–B–D)</th></tr>' + R.matches.filter(function (m) { return !m.bye; }).map(function (m) { return '<tr><td>' + m.table + '</td><td>' + esc(nm(m.a)) + '</td><td>' + esc(nm(m.b)) + '</td><td>___ – ___ – ___</td></tr>'; }).join('') + '</table>';
+    doPrint(h);
+  }
+  function printStandings() {
+    var h = '<h1>' + esc(T.name) + ' — Standings</h1><p>' + esc(T.format) + ' · ' + new Date().toLocaleString() + '</p><table><tr><th>#</th><th>Name</th><th>Pts</th><th>W-L-D</th><th>OMW%</th><th>GW%</th><th>OGW%</th></tr>' +
+      Core.standings(T).map(function (r) { return '<tr><td>' + r.rank + '</td><td>' + esc(r.name) + (r.dropped ? ' (drop)' : '') + '</td><td>' + r.mp + '</td><td>' + recordStr(r) + '</td><td>' + pct(r.omw) + '</td><td>' + pct(r.gwp) + '</td><td>' + pct(r.ogw) + '</td></tr>'; }).join('') + '</table>';
+    doPrint(h);
+  }
+  function exportJSON() {
+    var blob = new Blob([JSON.stringify(T, null, 2)], { type: 'application/json' }), a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = (T.name || 'tournament').replace(/[^\w\-]+/g, '_') + '.json'; document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  function importJSON() {
+    var inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,application/json';
+    inp.onchange = function () {
+      var f = inp.files[0]; if (!f) return; var rd = new FileReader();
+      rd.onload = function () { guard(function () { var j = JSON.parse(rd.result); if (!j || !j.settings || !Array.isArray(j.players)) throw new Error('Not a tournament file.'); j.settings = Object.assign({}, Core.BASE_SETTINGS, j.settings); j.teams = j.teams || []; j.rounds = j.rounds || []; T = j; UI.view = null; commit(); toast('Imported “' + T.name + '”'); }); };
+      rd.readAsText(f);
+    };
+    inp.click();
+  }
+
+  /* ---------- Timer ---------- */
+  var beeped = false;
+  function tick(force) {
+    if (!T || !T.timer) return;
+    var rem = Flow.timerRemaining(T), els = document.querySelectorAll('[data-tdisp]');
+    for (var i = 0; i < els.length; i++) { els[i].textContent = fmtTime(rem); els[i].classList.toggle('over', rem < 0); els[i].classList.toggle('low', rem >= 0 && rem < 60 && !!T.timer.running); }
+    if (T.timer.running && rem <= 0 && !force) {
+      var D = Flow.draftObj(T);
+      if ((T.phase === 'draft' || T.phase === 'topdraft') && D && !D.done && S().autoAdvancePicks && S().pickTimer !== 'off' && /^Pack/.test(T.timer.label)) { Flow.advancePick(T, 1); beep(); commit(); return; }
+      if (!beeped) { beeped = true; beep(); }
+    } else if (rem > 0) beeped = false;
+  }
+  function beep() { try { var ac = new (window.AudioContext || window.webkitAudioContext)(), o = ac.createOscillator(), g = ac.createGain(); o.connect(g); g.connect(ac.destination); o.frequency.value = 880; g.gain.value = 0.08; o.start(); o.stop(ac.currentTime + 0.25); } catch (e) { } }
+  function timerToggle() { var tm = T.timer; if (tm.running) { tm.remaining = Flow.timerRemaining(T); tm.running = false; } else { tm.running = true; tm.startedAt = Date.now(); var D = Flow.draftObj(T); if (D && (T.phase === 'draft' || T.phase === 'topdraft')) D.started = true; } commit(); }
+
+  /* ---------- actions ---------- */
+  function addPlayer(name, deck) {
+    name = String(name || '').trim(); if (!name) return;
+    var s = S(), late = inPlay() && !Flow.isElim(T) && T.phase !== 'topcut' && T.phase !== 'complete';
+    if (inPlay() && !late) throw new Error('Cannot add players to a fixed bracket.');
+    if (late && s.structure === 'rr') throw new Error('Round robin schedules are fixed; late entries are not supported.');
+    var p = { id: Core.uid('p'), name: name, deck: (deck || '').trim(), dropped: false, joinedRound: late ? T.rounds.length + 1 : 1, decklist: '' };
+    T.players.push(p);
+    if (s.matchType === 'team' && late) toast('Added. Put late players in a new team to enter them.');
+    return p;
+  }
+  var ACT = {
+    tab: function (el) { UI.tab = el.dataset.v; render(); },
+    draftView: function (el) { UI.draftView = el.dataset.v; render(); },
+    theme: function () { var l = document.documentElement.classList.toggle('light'); try { localStorage.setItem(THEME_KEY, l ? 'light' : 'dark'); } catch (e) { } render(); },
+    demo: function (el, e) { e.preventDefault(); UI.modal = 'demo'; render(); },
+    closeModal: function (el, e) { if (el.classList.contains('modal') && e.target !== el) return; UI.modal = null; render(); },
+    loadDemo: function (el) { guard(function () { var d = DEMOS[+el.dataset.v]; T = d.build(); UI.modal = null; UI.view = null; UI.draftView = null; UI.tab = d.tab || 'pairings'; commit(); toast('Demo loaded: ' + T.name); }); },
+    export: exportJSON, import: importJSON,
+    newEvent: function () { if (!confirm('Start a new tournament? The current one will be discarded (export it first to keep it).')) return; T = Core.newTournament({ name: 'New Tournament', format: T.format }); UI.tab = 'event'; UI.view = null; commit(); },
+    start: function () {
+      guard(function () {
+        var s = S();
+        if (s.matchType === 'team') { var bad = T.teams.filter(function (x) { return !x.dropped && x.members.length !== Number(s.teamSize); }); if (bad.length && !confirm(bad.length + ' team(s) do not have exactly ' + s.teamSize + ' members. Start anyway?')) return; }
+        Flow.start(T); UI.tab = T.phase === 'draft' ? 'draft' : T.phase === 'deckbuilding' ? 'deck' : Flow.isElim(T) ? 'bracket' : 'pairings'; commit();
+      });
+    },
+    reseat: function () { var D = Flow.draftObj(T), ids = []; D.pods.forEach(function (p) { ids = ids.concat(p.seats); }); D.pods = T.phase === 'topdraft' ? [{ id: D.pods[0].id, seats: Core.shuffle(ids) }] : Core.makeDraftPods(ids, Number(S().draftPodMax)); commit(); },
+    pickNext: function () { Flow.advancePick(T, 1); commit(); }, pickPrev: function () { Flow.advancePick(T, -1); commit(); }, packNext: function () { Flow.nextPack(T); commit(); },
+    finishDraft: function () { var D = Flow.draftObj(T); if (!D.done && !confirm('Draft not finished (pack ' + D.pack + ', pick ' + D.pick + '). Move to deckbuilding anyway?')) return; Flow.finishDraft(T); UI.tab = 'deck'; commit(); },
+    deckNext: function () { guard(function () { var wasReg = T.deckbuilding && T.deckbuilding.stage === 'registration'; Flow.nextDeckStage(T); if (!wasReg) UI.tab = T.phase === 'topcut' ? 'bracket' : 'pairings'; commit(); }); },
+    timerToggle: timerToggle,
+    timerReset: function () { T.timer.remaining = T.timer.duration; T.timer.running = false; commit(); },
+    timerAdd: function () { if (T.timer.running) T.timer.remaining += 60; else T.timer.remaining += 60; commit(); },
+    timerSub: function () { T.timer.remaining -= 60; commit(); },
+    timerRound: function () { var lbl = T.bracket && (T.phase === 'topcut' || Flow.isElim(T)) ? 'Match time' : (T.rounds.length ? (T.rounds[T.rounds.length - 1].kind === 'final' ? 'Final table' : 'Round ' + T.rounds[T.rounds.length - 1].num) : 'Round'); Flow.setTimer(T, lbl, Number(S().roundMinutes) * 60, false); commit(); },
+    overlay: function (el) { UI.overlay = el.dataset.v || null; if (!UI.overlay && document.fullscreenElement) document.exitFullscreen().catch(function () { }); render(); },
+    fullscreen: function () { var d = document.documentElement; if (d.requestFullscreen) d.requestFullscreen().catch(function () { }); },
+    drop: function (el) { var p = T.players.find(function (x) { return x.id === el.dataset.id; }); if (!p) return; p.dropped = true; p.droppedAfter = T.rounds.length; commit(); },
+    undrop: function (el) { var p = T.players.find(function (x) { return x.id === el.dataset.id; }); p.dropped = false; delete p.droppedAfter; commit(); },
+    removePlayer: function (el) { if (!confirm('Remove this player?')) return; var id = el.dataset.id; T.players = T.players.filter(function (x) { return x.id !== id; }); T.teams.forEach(function (tm) { tm.members = tm.members.filter(function (m) { return m !== id; }); }); commit(); },
+    dropTeam: function (el) { var tm = T.teams.find(function (x) { return x.id === el.dataset.id; }); tm.dropped = true; commit(); },
+    undropTeam: function (el) { var tm = T.teams.find(function (x) { return x.id === el.dataset.id; }); tm.dropped = false; commit(); },
+    removeTeam: function (el) { T.teams = T.teams.filter(function (x) { return x.id !== el.dataset.id; }); commit(); },
+    autoTeams: function () {
+      var size = Number(S().teamSize), assigned = {}; T.teams.forEach(function (tm) { tm.members.forEach(function (m) { assigned[m] = 1; }); });
+      var free = Core.shuffle(T.players.filter(function (p) { return !assigned[p.id] && !p.dropped; }).map(function (p) { return p.id; }));
+      T.teams.forEach(function (tm) { while (tm.members.length < size && free.length) tm.members.push(free.shift()); });
+      while (free.length) { var mem = free.splice(0, size); T.teams.push({ id: Core.uid('tm'), name: 'Team ' + (T.teams.length + 1), members: mem, joinedRound: inPlay() ? T.rounds.length + 1 : 1 }); }
+      commit();
+    },
+    openDeck: function (el) { UI.openDeck = UI.openDeck === el.dataset.id ? null : el.dataset.id; render(); },
+    viewRound: function (el) { UI.view = +el.dataset.v; render(); },
+    quick: function (el) { var m = findMatch(el.dataset.mid), r = el.dataset.r; if (r === 'ID') m.res = { a: 0, b: 0, d: 0, id: true }; else { var p = r.split('-').map(Number); m.res = { a: p[0], b: p[1], d: p[2] || 0 }; } commit(); },
+    clearRes: function (el) { var m = findMatch(el.dataset.mid); m.res = null; if (T.phase === 'complete' && m.pod) T.phase = 'topcut'; commit(); },
+    nextRound: function () { guard(function () { Flow.generateRound(T); UI.view = null; commit(); }); },
+    extraRound: function () { guard(function () { S().swissRounds = Flow.totalRounds(T) + 1; Flow.generateRound(T); UI.view = null; commit(); }); },
+    deleteRound: function () { if (!confirm('Delete round ' + T.rounds.length + ' pairings?')) return; T.rounds.pop(); UI.view = null; commit(); if (!T.rounds.length) { guard(function () { Flow.generateRound(T); }); commit(); } },
+    topCut: function () { guard(function () { Flow.startTopCut(T); UI.tab = T.phase === 'topdraft' ? 'draft' : S().matchType === 'pod' ? 'pairings' : 'bracket'; UI.view = null; commit(); }); },
+    finish: function () { T.phase = 'complete'; UI.tab = 'standings'; commit(); },
+    bres: function (el) { guard(function () { var o = Core.resolveBracket(T.bracket)[el.dataset.mid], p = el.dataset.r.split('-').map(Number); Core.setBracketResult(T.bracket, el.dataset.mid, p[0] > p[1] ? o.p[0] : o.p[1], p[0], p[1]); commit(); }); },
+    bclear: function (el) { delete T.bracket.results[el.dataset.mid]; if (T.phase === 'complete') T.phase = T.bracket.topCut ? 'topcut' : 'rounds'; commit(); },
+    printPairings: printPairings, printStandings: printStandings
+  };
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-act]'); if (!el) return;
+    var f = ACT[el.dataset.act]; if (f) f(el, e);
+  });
+  document.addEventListener('submit', function (e) {
+    var f = e.target.dataset.form; if (!f) return; e.preventDefault();
+    var fd = new FormData(e.target);
+    guard(function () {
+      if (f === 'addPlayer') { addPlayer(fd.get('name'), fd.get('deck')); commit(); var i = document.querySelector('[data-form=addPlayer] input[name=name]'); if (i) i.focus(); }
+      if (f === 'bulk') { String(fd.get('bulk') || '').split(/\r?\n/).forEach(function (l) { var p = l.split(','); if (p[0].trim()) addPlayer(p[0], p.slice(1).join(',')); }); commit(); }
+      if (f === 'addTeam') { T.teams.push({ id: Core.uid('tm'), name: String(fd.get('name') || '').trim() || 'Team ' + (T.teams.length + 1), members: [], joinedRound: inPlay() ? T.rounds.length + 1 : 1 }); commit(); }
+    });
+  });
+  document.addEventListener('change', function (e) {
+    var el = e.target, d = el.dataset;
+    if (d.set) {
+      var v = d.type === 'bool' ? el.checked : d.type === 'num' ? Number(el.value) : d.type === 'list' ? el.value.split(/[,\s]+/).filter(Boolean).map(Number) : el.value;
+      if (['bestOf', 'teamSize', 'topCut'].indexOf(d.set) >= 0) v = Number(v);
+      S()[d.set] = v;
+      if (d.set === 'roundMinutes' && !T.timer.running && /^(Round|Match|Timer|Final|Top)/.test(T.timer.label)) { T.timer.duration = T.timer.remaining = v * 60; }
+      if ((d.set === 'deckbuildMinutes' || d.set === 'registrationMinutes') && !T.timer.running && (T.phase === 'deckbuilding' || T.phase === 'topdeck')) Flow.setDeckTimer(T);
+      commit(); return;
+    }
+    if (d.tset === 'name') { T.name = el.value; commit(); return; }
+    if (d.tset === 'format') {
+      if (inPlay() || T.phase !== 'registration') { if (!confirm('The event is in progress. Change only the format label (keep current settings)?')) { render(); return; } T.format = el.value; commit(); return; }
+      T.format = el.value; T.settings = Core.applyPreset(el.value); toast('Applied ' + el.value + ' defaults'); commit(); return;
+    }
+    if (d.pf) {
+      var p = T.players.find(function (x) { return x.id === d.id; }); if (!p) return;
+      if (d.pf === 'team') { T.teams.forEach(function (tm) { tm.members = tm.members.filter(function (m) { return m !== p.id; }); }); var tm = T.teams.find(function (x) { return x.id === el.value; }); if (tm) tm.members.push(p.id); }
+      else p[d.pf] = d.pf === 'name' ? (el.value.trim() || p.name) : el.value;
+      commit(); return;
+    }
+    if (d.tf) { var t2 = T.teams.find(function (x) { return x.id === d.id; }); if (t2) t2.name = el.value.trim() || t2.name; commit(); return; }
+    if (d.res) { var m = findMatch(d.mid); var r = m.res || { a: 0, b: 0, d: 0 }; r[d.res] = Math.max(0, Number(el.value) || 0); delete r.id; m.res = r; commit(); return; }
+    if (d.podwin) { var pm = findMatch(d.podwin); pm.res = el.value === '__draw' ? { draw: true } : el.value ? { winner: el.value } : null; commit(); return; }
+    if (d.podplace) { var qm = findMatch(d.podplace); qm.res = qm.res || { places: {} }; qm.res.places = qm.res.places || {}; if (el.value) qm.res.places[d.cid] = Number(el.value); else delete qm.res.places[d.cid]; commit(); return; }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && (UI.overlay || UI.modal)) { UI.overlay = null; UI.modal = null; render(); }
+    if (e.key === ' ' && UI.overlay === 'timer') { e.preventDefault(); timerToggle(); }
+  });
+
+  /* ---------- Demo tournaments ---------- */
+  var NAMES = ['Alex Chen', 'Brianna Ortiz', 'Caleb Nguyen', 'Dana Whitfield', 'Elijah Brooks', 'Fatima Haddad', 'Gabe Moreno', 'Hana Sato', 'Isaac Turner', 'Jade Kowalski', 'Kofi Mensah', 'Lena Fischer', 'Marco Rossi', 'Nadia Petrova', 'Owen Gallagher', 'Priya Raman', 'Quinn Harper', 'Rosa Delgado', 'Sam Okafor', 'Tess Lindqvist', 'Umar Siddiqui', 'Vera Novak', 'Wes Callahan', 'Ximena Ruiz', 'Yuki Tanaka', 'Zane Mercer', 'Ava Sinclair', 'Ben Adler', 'Cora Bianchi', 'Dev Patel', 'Elle Moreau', 'Finn O’Neill'];
+  var MODERN = ['Boros Energy', 'Ruby Storm', 'Amulet Titan', 'Eldrazi Ramp', 'Living End', 'Jeskai Control', 'Izzet Murktide', 'Goryo’s Vengeance', 'Mono-Black Necro', 'Domain Zoo', 'Hammer Time', 'Burn', 'Yawgmoth', 'Affinity', 'Dimir Frog', 'Tron', 'Merfolk'];
+  var CMDRS = ['Atraxa, Praetors’ Voice', 'Krenko, Mob Boss', 'The Ur-Dragon', 'Edgar Markov', 'Kenrith, the Returned King', 'Yuriko, the Tiger’s Shadow', 'Lathril, Blade of the Elves', 'Prosper, Tome-Bound', 'Muldrotha, the Gravetide', 'Miirym, Sentinel Wyrm', 'Isshin, Two Heavens as One', 'Sythis, Harvest’s Hand', 'Kinnan, Bonder Prodigy', 'Tymna & Thrasios'];
+  var LIMITED = ['UW Fliers', 'BR Aggro', 'GW Go-wide', 'UB Control', 'RG Midrange', 'WB Lifegain', 'UR Spells', 'BG Graveyard', 'Mono-Green', 'Jund Splash'];
+  function mk(fmt, name, n, decks) { var t = Core.newTournament({ name: name, format: fmt }); for (var i = 0; i < n; i++) t.players.push({ id: Core.uid('p'), name: NAMES[i % NAMES.length] + (i >= NAMES.length ? ' II' : ''), deck: decks ? decks[i % decks.length] : '', dropped: false, joinedRound: 1, decklist: '' }); return t; }
+  function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+  function simMatch(t, m) {
+    var s = t.settings;
+    if (m.bye) return;
+    if (m.pod) { if (s.podScoring === 'placement') { var pl = {}; Core.shuffle(m.pod).forEach(function (c, i) { pl[c] = i + 1; }); m.res = { places: pl }; } else m.res = Math.random() < 0.07 ? { draw: true } : { winner: pick(m.pod) }; return; }
+    var bo = Number(s.bestOf), o = bo === 1 ? [[1, 0], [0, 1]] : bo === 5 ? [[3, 0], [3, 1], [3, 2], [2, 3], [1, 3], [0, 3]] : [[2, 0], [2, 1], [2, 1], [1, 2], [0, 2], [1, 2], [2, 0], [0, 2], [1, 1]];
+    var r = pick(o); m.res = { a: r[0], b: r[1], d: 0 };
+  }
+  function simRound(t) { t.rounds[t.rounds.length - 1].matches.forEach(function (m) { simMatch(t, m); }); }
+  function simRoundExact(t, count) { var k = 0; t.rounds[t.rounds.length - 1].matches.forEach(function (m) { if (!m.bye && k < count) { simMatch(t, m); k++; } }); }
+  function runTimer(t, minutesAgo) { t.timer.running = true; t.timer.startedAt = Date.now() - minutesAgo * 60000; }
+  function deckText(main) { var lands = 17, spells = main - lands; return '// Main\n' + spells + ' Assorted spells\n' + lands + ' Basic lands\n\nSideboard\n12 Other pool cards'; }
+  var DEMOS = [
+    { title: 'Modern Showdown — Swiss + Top 8', desc: '15 players + 1 late entry, 1 drop, Bo3, round 3 of 5 in progress, timer running', tab: 'pairings', build: function () {
+      var t = mk('Modern', 'Modern Showdown', 15, MODERN); t.settings.topCut = 8; t.settings.swissRounds = 5;
+      t.players.forEach(function (p) { p.decklist = '4 Main deck cards\n56 More main deck cards\n\nSideboard\n15 Sideboard cards'; });
+      Flow.start(t); simRound(t); t.players[5].dropped = true; t.players[5].droppedAfter = 1; Flow.generateRound(t);
+      t.players.push({ id: Core.uid('p'), name: 'Leo Marchetti', deck: 'Burn', joinedRound: 3, dropped: false, decklist: '' });
+      simRound(t); Flow.generateRound(t); simRoundExact(t, 5); runTimer(t, 21); return t; } },
+    { title: 'Booster Draft — in the draft', desc: '12 players, 2 pods of 6, pack 2 pick 5 (pass right), cross-table round 1', tab: 'draft', build: function () {
+      var t = mk('Booster Draft', 'Duskmourn Booster Draft', 12, LIMITED); t.settings.setName = 'Duskmourn';
+      Flow.start(t); t.draft.pack = 2; t.draft.pick = 5; t.draft.started = true; Flow.setPickTimer(t, false); return t; } },
+    { title: 'Vintage Cube — Top 8 re-draft', desc: '16 players, 4 Swiss rounds done, top 8 seated for a re-draft', tab: 'draft', build: function () {
+      var t = mk('Cube', 'Vintage Cube Open', 16, LIMITED); t.settings.setName = 'Vintage Cube'; t.settings.swissRounds = 4; t.settings.topCut = 8; t.settings.redraftTop8 = true;
+      Flow.start(t); t.draft.pack = 3; t.draft.pick = 15; Flow.finishDraft(t); Flow.nextDeckStage(t); for (var i = 0; i < 4; i++) { if (i) Flow.generateRound(t); simRound(t); } Flow.startTopCut(t); return t; } },
+    { title: 'Prerelease Sealed — deckbuilding', desc: '10 players with prerelease kits, 15 min pool registration then 30 min build', tab: 'deck', build: function () {
+      var t = mk('Sealed', 'Saturday Prerelease', 10, LIMITED); t.settings.setName = 'Bloomburrow'; t.settings.sealedKit = 'prerelease'; t.settings.registrationMinutes = 15;
+      t.players.forEach(function (p, i) { if (i < 6) p.decklist = deckText(i === 2 ? 38 : 40); });
+      Flow.start(t); Flow.nextDeckStage(t); runTimer(t, 8); return t; } },
+    { title: 'Commander Night — 13 players in pods', desc: 'Pods of 5/4/4 avoiding repeat pod-mates, round 2 in progress', tab: 'pairings', build: function () {
+      var t = mk('Commander', 'Commander Night', 13, CMDRS); t.settings.swissRounds = 3; Flow.start(t); simRound(t); Flow.generateRound(t); simRoundExact(t, 1); runTimer(t, 34); return t; } },
+    { title: 'cEDH — placement scoring + final table', desc: '16 players, placement points 4/3/2/1, 3 rounds done, top-4 final pod next', tab: 'standings', build: function () {
+      var t = mk('cEDH', 'cEDH Championship', 16, CMDRS); t.settings.podScoring = 'placement'; t.settings.swissRounds = 3; Flow.start(t); for (var i = 0; i < 3; i++) { if (i) Flow.generateRound(t); simRound(t); } return t; } },
+    { title: 'Two-Headed Giant Sealed', desc: '8 teams of 2 (8 packs per team), round 2 in progress', tab: 'pairings', build: function () {
+      var t = mk('Two-Headed Giant', '2HG Sealed Showdown', 16, LIMITED); t.settings.setName = 'Foundations';
+      var tn = ['Double Trouble', 'Two Heads Better', 'Giant Slayers', 'Mana Twins', 'Split Second', 'Pair of Kings', 'Dual Lands', 'Combat Tricks'];
+      for (var i = 0; i < 8; i++) t.teams.push({ id: Core.uid('tm'), name: tn[i], members: [t.players[2 * i].id, t.players[2 * i + 1].id], joinedRound: 1 });
+      Flow.start(t); Flow.nextDeckStage(t); simRound(t); Flow.generateRound(t); simRoundExact(t, 2); runTimer(t, 30); return t; } },
+    { title: 'Team Sealed (Trios)', desc: '6 teams of 3, 12 packs per team, in deckbuilding', tab: 'deck', build: function () {
+      var t = mk('Team Sealed', 'Team Sealed Trios', 18, LIMITED); t.settings.setName = 'Outlaws of Thunder Junction';
+      for (var i = 0; i < 6; i++) t.teams.push({ id: Core.uid('tm'), name: 'Trio ' + String.fromCharCode(65 + i), members: [t.players[3 * i].id, t.players[3 * i + 1].id, t.players[3 * i + 2].id], joinedRound: 1 });
+      Flow.start(t); return t; } },
+    { title: 'Pauper — double elimination', desc: '8 players, winners/losers brackets, partly played', tab: 'bracket', build: function () {
+      var t = mk('Pauper', 'Pauper Double Elim', 8, ['Mono-Red Kuldotha', 'Dimir Terror', 'Affinity', 'Caw-Gates', 'Elves', 'Familiars', 'Boros Synth', 'Walls Combo']); t.settings.structure = 'double'; Flow.start(t);
+      var br = t.bracket; ['W1-0', 'W1-1', 'W1-2', 'W1-3', 'L1-0', 'W2-0'].forEach(function (id) { var o = Core.resolveBracket(br)[id]; if (o.status === 'ready') { var w = Math.random() < 0.5 ? 0 : 1; Core.setBracketResult(br, id, o.p[w], w ? 1 : 2, w ? 2 : 1); } }); return t; } },
+    { title: 'Legacy — round robin league', desc: '6 players, 5-round round robin, round 3 in progress', tab: 'pairings', build: function () {
+      var t = mk('Legacy', 'Legacy League', 6, ['Delver', 'Reanimator', 'Lands', 'Death & Taxes', 'Show and Tell', 'Painter']); t.settings.structure = 'rr'; Flow.start(t); simRound(t); Flow.generateRound(t); simRound(t); Flow.generateRound(t); simRoundExact(t, 1); return t; } }
+  ];
+
+  /* ---------- boot ---------- */
+  try { if (localStorage.getItem(THEME_KEY) === 'light') document.documentElement.classList.add('light'); } catch (e) { }
+  load(); render();
+  setInterval(function () { tick(false); }, 250);
+  window.MTG = { get T() { return T; }, render: render, DEMOS: DEMOS, ACT: ACT, UI: UI };
+})();
+</script>
+</body></html>
